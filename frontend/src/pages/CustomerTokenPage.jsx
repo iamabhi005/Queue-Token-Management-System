@@ -57,13 +57,37 @@ export default function CustomerTokenPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
 
-  // Generated Result
-  const [generatedToken, setGeneratedToken] = useState(null);
+  // Generated Result (persisted in session so customer does not lose their ticket on reload)
+  const [generatedToken, setGeneratedToken] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('smartqueue_customer_token');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
 
   // Track Token Search State
   const [searchQuery, setSearchQuery] = useState('');
   const [trackedToken, setTrackedToken] = useState(null);
   const [searchError, setSearchError] = useState('');
+
+  // Keep customer token in sync with live real-time status updates (SERVING, COMPLETED, etc.)
+  useEffect(() => {
+    if (generatedToken) {
+      const gId = generatedToken.id || generatedToken._id;
+      const latest = tokens.find(t => (t.id || t._id) === gId);
+      if (latest && (latest.status !== generatedToken.status || latest.counterNumber !== generatedToken.counterNumber)) {
+        const updated = { ...generatedToken, ...latest };
+        setGeneratedToken(updated);
+        try {
+          sessionStorage.setItem('smartqueue_customer_token', JSON.stringify(updated));
+        } catch {
+          // ignore storage error
+        }
+      }
+    }
+  }, [tokens, generatedToken]);
 
   // Check URL query parameters (e.g. ?tab=check)
   useEffect(() => {
@@ -107,6 +131,11 @@ export default function CustomerTokenPage() {
         serviceId: selectedServiceId
       });
       setGeneratedToken(token);
+      try {
+        sessionStorage.setItem('smartqueue_customer_token', JSON.stringify(token));
+      } catch {
+        // ignore
+      }
     } catch (err) {
       console.error('Token generation error:', err);
       setFormError(err.message || 'Failed to generate token.');
@@ -195,10 +224,7 @@ export default function CustomerTokenPage() {
         <div className="flex justify-center mb-8">
           <div className="bg-white p-1.5 rounded-2xl border border-slate-200/90 shadow-xs inline-flex gap-1">
             <button
-              onClick={() => {
-                setActiveTab('generate');
-                setGeneratedToken(null);
-              }}
+              onClick={() => setActiveTab('generate')}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                 activeTab === 'generate'
                   ? 'bg-purple-600 text-white shadow-sm'
@@ -536,6 +562,11 @@ export default function CustomerTokenPage() {
                     <button
                       onClick={() => {
                         setGeneratedToken(null);
+                        try {
+                          sessionStorage.removeItem('smartqueue_customer_token');
+                        } catch {
+                          // ignore
+                        }
                         setCustomerName('');
                       }}
                       className="flex-1 py-3 px-4 rounded-xl text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer"
