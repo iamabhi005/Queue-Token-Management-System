@@ -1,0 +1,8 @@
+"Service ID","Service Name","Description","Avg Time (Minutes)","Is Active","Created At"
+"6ad9a1589bc3463c0e97306f","General Banking & Cashier","Cash deposits, withdrawals, drafts and teller requests","8","true","2026-10-22T05:38:32.063Z"
+"6ad9a1589bc3463c0e973071","Account & Card Services","Account opening, debit/credit cards, and KYC verification","12","true","2026-10-22T05:38:32.064Z"
+"6ad9a1589bc3463c0e973073","Loan & Wealth Advisory","Personal loans, home loans, and investment advisory","20","true","2026-10-22T05:38:32.064Z"
+"6ad9a1589bc3463c0e973075","OPD Doctor Consultation","General physician checkup and triage consultation","15","true","2026-10-22T05:38:32.065Z"
+"6ad9a17eefbd0eb0f38346b6","Passport & Visa Verification","Document verification and biometric capture","18","true","2026-10-22T05:39:10.630Z"
+"6ad9e05439a65be96ac7d068","Special Verification 1792663636648","Document verification and biometric capture","18","true","2026-10-22T10:07:16.651Z"
+"6ad9e4ecc62ec6b5d05d0942","Special Verification 1792664812968","Document verification and biometric capture","18","true","2026-10-22T10:26:52.972Z"

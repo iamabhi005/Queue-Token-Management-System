@@ -1,0 +1,3 @@
+"Log ID","Action Performed","Target Dataset","Performed By","Action Details","Logged At"
+"6ada13ddd1872833aa426094","TOKEN_CREATED","tokens","Abhishek Patel Database Test","{""tokenId"":""6ada13ddd1872833aa426092"",""tokenNumber"":""GB&C-009"",""customerName"":""Abhishek Patel Database Test"",""service"":""General Banking & Cashier""}","2026-10-22T13:47:09.583Z"
+"6ada13d5d1872833aa42608e","LOGIN","users","admin@smartqueue.com","{""userId"":""6ad9a1589bc3463c0e97306a"",""email"":""admin@smartqueue.com"",""role"":""ADMIN""}","2026-10-22T13:47:01.761Z"
