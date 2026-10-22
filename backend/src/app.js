@@ -8,6 +8,7 @@ const tokenRoutes = require('./routes/tokenRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const queueRoutes = require('./routes/queueRoutes');
+const aiRoutes = require('./routes/aiRoutes');
 const { errorHandler, notFoundHandler } = require('./middlewares/errorHandler');
 
 const app = express();
@@ -53,6 +54,7 @@ app.use('/api/tokens', tokenRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/queue', queueRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/ai', aiRoutes);
 
 // 404 Route Catch-All
 app.use(notFoundHandler);

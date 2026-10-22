@@ -125,3 +125,15 @@ export const adminAPI = {
       body: JSON.stringify({ name, description, averageServiceTime })
     })
 };
+
+// 5. SmartQueue AI Assistant APIs (Unlimited Queue Assistant)
+export const aiAPI = {
+  sendMessage: (message, conversationHistory = [], tokenId = null) =>
+    request('/ai/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message, conversationHistory, tokenId })
+    }),
+
+  getSuggestions: () => request('/ai/suggestions')
+};
+

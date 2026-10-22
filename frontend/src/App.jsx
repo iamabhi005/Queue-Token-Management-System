@@ -10,6 +10,7 @@ import AdminDashboardPage from './pages/AdminDashboardPage';
 import PublicDisplayPage from './pages/PublicDisplayPage';
 import TokenHistoryPage from './pages/TokenHistoryPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import AIChatWidget from './components/common/AIChatWidget';
 
 export default function App() {
   return (
@@ -52,6 +53,8 @@ export default function App() {
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          {/* SmartQueue AI Assistant Widget */}
+          <AIChatWidget />
         </BrowserRouter>
       </QueueProvider>
     </AuthProvider>
