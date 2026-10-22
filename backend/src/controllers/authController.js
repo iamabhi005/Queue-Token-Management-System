@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const ActivityLog = require('../models/ActivityLog');
 const AppError = require('../utils/AppError');
 
 /**
@@ -41,6 +42,14 @@ const register = async (req, res, next) => {
       role: role || 'STAFF'
     });
 
+    // Record in audit log dataset
+    await ActivityLog.create({
+      action: 'REGISTER',
+      dataset: 'users',
+      details: { userId: newUser._id, email: newUser.email, role: newUser.role },
+      performedBy: newUser.email
+    }).catch(err => console.warn('[ActivityLog] Could not log registration:', err.message));
+
     const token = signToken(newUser);
 
     res.status(201).json({
@@ -74,6 +83,14 @@ const login = async (req, res, next) => {
     if (!isMatch) {
       return next(new AppError('Invalid email or password.', 401));
     }
+
+    // Record in audit log dataset
+    await ActivityLog.create({
+      action: 'LOGIN',
+      dataset: 'users',
+      details: { userId: user._id, email: user.email, role: user.role },
+      performedBy: user.email
+    }).catch(err => console.warn('[ActivityLog] Could not log login:', err.message));
 
     const token = signToken(user);
 

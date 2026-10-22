@@ -16,6 +16,7 @@ const counterSchema = new mongoose.Schema({
     default: true
   }
 }, {
+  collection: 'counters',
   timestamps: true,
   versionKey: false,
   toJSON: {

@@ -33,7 +33,8 @@ const userSchema = new mongoose.Schema({
     default: Date.now
   }
 }, {
-  timestamps: false,
+  collection: 'users',
+  timestamps: true,
   versionKey: false
 });
 

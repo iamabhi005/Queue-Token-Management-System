@@ -165,7 +165,7 @@ Customer query: "${message}"
 Please respond clearly, concisely, and warmly in a few short sentences. If asked about wait times or tokens, refer to the live context provided above.`;
 
       // Try calling Gemini with a 5-second timeout so the customer never experiences latency
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: AbortSignal.timeout(5000),

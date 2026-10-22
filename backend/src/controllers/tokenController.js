@@ -1,6 +1,7 @@
 const Token = require('../models/Token');
 const Service = require('../models/Service');
 const Counter = require('../models/Counter');
+const ActivityLog = require('../models/ActivityLog');
 const AppError = require('../utils/AppError');
 const { generateNextTokenNumber } = require('../utils/tokenGenerator');
 const { emitQueueUpdate } = require('../config/socket');
@@ -33,6 +34,14 @@ const createToken = async (req, res, next) => {
       status: 'WAITING',
       createdAt: new Date()
     });
+
+    // Record in activity logs dataset
+    await ActivityLog.create({
+      action: 'TOKEN_CREATED',
+      dataset: 'tokens',
+      details: { tokenId: token._id, tokenNumber: token.tokenNumber, customerName: token.customerName, service: service.name },
+      performedBy: customerName.trim()
+    }).catch(err => console.warn('[ActivityLog] Could not log token creation:', err.message));
 
     // Calculate queue backlog ahead of this customer
     const waitingAhead = await Token.countDocuments({

@@ -15,6 +15,7 @@ const tokenSequenceSchema = new mongoose.Schema({
     default: 0
   }
 }, {
+  collection: 'tokensequences',
   timestamps: true,
   versionKey: false
 });

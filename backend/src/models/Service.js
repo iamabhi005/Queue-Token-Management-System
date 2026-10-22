@@ -23,6 +23,7 @@ const serviceSchema = new mongoose.Schema({
     default: 10
   }
 }, {
+  collection: 'services',
   timestamps: true,
   versionKey: false,
   toJSON: {
