@@ -148,11 +148,10 @@ function generateContextualAnswer(message, context) {
 async function processChatMessage({ message, conversationHistory = [], userTokenId = null }) {
   const context = await getLiveQueueContext(userTokenId);
 
-  const apiKey = process.env.GEMINI_API_KEY || process.env.AI_API_KEY;
+  const apiKey = (process.env.GEMINI_API_KEY || process.env.AI_API_KEY || '').trim();
 
-  if (apiKey && apiKey.trim() !== '' && !apiKey.includes('your_')) {
+  if (apiKey && apiKey !== '' && !apiKey.includes('your_')) {
     try {
-      // Call Google Gemini API (gemini-1.5-flash)
       const prompt = `You are SmartQueue AI, a helpful, polite customer assistant for a real-time queue and token management facility.
 Current facility queue context:
 - Total waiting customers: ${context.totalWaiting}
@@ -163,16 +162,18 @@ ${context.userToken ? `- Active Customer Ticket Info: ${JSON.stringify(context.u
 
 Customer query: "${message}"
 
-Please respond clearly, concisely, and warmly. If asked about wait times or tokens, refer to the live context provided above.`;
+Please respond clearly, concisely, and warmly in a few short sentences. If asked about wait times or tokens, refer to the live context provided above.`;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`, {
+      // Try calling Gemini with a 5-second timeout so the customer never experiences latency
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(5000),
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.7,
-            maxOutputTokens: 500
+            maxOutputTokens: 350
           }
         })
       });
@@ -183,15 +184,16 @@ Please respond clearly, concisely, and warmly. If asked about wait times or toke
         if (candidate) {
           return {
             reply: candidate,
-            source: 'gemini-1.5-flash',
+            source: 'gemini-cloud-api',
             context
           };
         }
       } else {
-        console.warn(`[AI Service] Gemini API returned status ${response.status}, falling back to unlimited live engine.`);
+        const errData = await response.json().catch(() => ({}));
+        console.warn(`[AI Service] Gemini API response status ${response.status}:`, errData?.error?.message?.slice(0, 80));
       }
     } catch (err) {
-      console.warn('[AI Service] Gemini API fetch error:', err.message, '-> using unlimited live engine.');
+      console.warn('[AI Service] Gemini API notice:', err.message, '-> using unlimited live engine.');
     }
   }
 
