@@ -1,0 +1,15 @@
+{
+  "name": "smartqueue-project",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SmartQueue – Queue Token Management System",
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "start:backend": "npm --prefix backend start",
+    "seed:backend": "npm --prefix backend run seed",
+    "test:backend": "node backend/src/utils/testEndpoints.js",
+    "build": "npm --prefix frontend run build",
+    "preview": "npm --prefix frontend run preview"
+  }
+}

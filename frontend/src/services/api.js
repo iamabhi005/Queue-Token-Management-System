@@ -1,0 +1,127 @@
+// HTTP API Client for SmartQueue Backend (http://localhost:5001/api)
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+
+/**
+ * Helper to make HTTP requests with JSON and Bearer auth header
+ */
+async function request(endpoint, options = {}) {
+  const token = localStorage.getItem('smartqueue_token');
+
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(options.headers || {})
+  };
+
+  const config = {
+    ...options,
+    headers
+  };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}${endpoint}`, config);
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      // Handle expired session or unauthorized token
+      if (res.status === 401 && token) {
+        console.warn('[API Auth] Session expired or invalid token. Clearing credentials.');
+        localStorage.removeItem('smartqueue_token');
+        localStorage.removeItem('smartqueue_auth_user');
+        localStorage.removeItem('smartqueue_user');
+        window.dispatchEvent(new Event('smartqueue_auth_expired'));
+      }
+
+      const errorMsg = data.message || `Request failed with status ${res.status}`;
+      const err = new Error(errorMsg);
+      err.status = res.status;
+      err.data = data;
+      throw err;
+    }
+
+    return data;
+  } catch (error) {
+    console.error(`[API Error] ${options.method || 'GET'} ${endpoint}:`, error.message);
+    throw error;
+  }
+}
+
+// 1. Authentication APIs
+export const authAPI = {
+  login: (email, password) =>
+    request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    }),
+
+  register: (name, email, password, role = 'STAFF') =>
+    request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password, role })
+    })
+};
+
+// 2. Public Services API
+export const serviceAPI = {
+  getActiveServices: () => request('/services')
+};
+
+// 2b. Public Queue API (no auth required)
+export const queueAPI = {
+  getTodayTokens: () => request('/queue/today'),
+  getCounters: () => request('/queue/counters')
+};
+
+// 3. Customer Token APIs
+export const tokenAPI = {
+  createToken: (customerName, serviceId) =>
+    request('/tokens', {
+      method: 'POST',
+      body: JSON.stringify({ customerName, serviceId })
+    }),
+
+  getTokenById: (id) => request(`/tokens/${id}`),
+
+  getTokenStatus: (id) => request(`/tokens/status/${id}`)
+};
+
+// 4. Admin Queue & Operations APIs
+export const adminAPI = {
+  getTokens: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request(`/admin/tokens${query ? `?${query}` : ''}`);
+  },
+
+  getStats: () => request('/admin/stats'),
+
+  callNextToken: (counterId, serviceId) =>
+    request('/admin/tokens/next', {
+      method: 'POST',
+      body: JSON.stringify({ counterId, serviceId })
+    }),
+
+  completeToken: (id) =>
+    request(`/admin/tokens/${id}/complete`, {
+      method: 'PATCH'
+    }),
+
+  skipToken: (id) =>
+    request(`/admin/tokens/${id}/skip`, {
+      method: 'PATCH'
+    }),
+
+  getCounters: () => request('/admin/counters'),
+
+  createCounter: (name, serviceId) =>
+    request('/admin/counters', {
+      method: 'POST',
+      body: JSON.stringify({ name, serviceId })
+    }),
+
+  createService: (name, description, averageServiceTime) =>
+    request('/admin/services', {
+      method: 'POST',
+      body: JSON.stringify({ name, description, averageServiceTime })
+    })
+};
