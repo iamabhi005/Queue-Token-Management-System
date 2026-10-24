@@ -6,7 +6,8 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
  * Helper to make HTTP requests with JSON and Bearer auth header
  */
 async function request(endpoint, options = {}) {
-  const token = localStorage.getItem('smartqueue_token');
+  const isAuthEndpoint = endpoint.startsWith('/auth/login') || endpoint.startsWith('/auth/register');
+  const token = isAuthEndpoint ? null : localStorage.getItem('smartqueue_token');
 
   const headers = {
     'Content-Type': 'application/json',
@@ -25,7 +26,7 @@ async function request(endpoint, options = {}) {
 
     if (!res.ok) {
       // Handle expired session or unauthorized token
-      if (res.status === 401 && token) {
+      if (res.status === 401 && !isAuthEndpoint && token) {
         console.warn('[API Auth] Session expired or invalid token. Clearing credentials.');
         localStorage.removeItem('smartqueue_token');
         localStorage.removeItem('smartqueue_auth_user');
@@ -42,6 +43,11 @@ async function request(endpoint, options = {}) {
 
     return data;
   } catch (error) {
+    if (error.name === 'TypeError' || (error.message && error.message.toLowerCase().includes('fetch'))) {
+      const connErr = new Error('Cannot connect to backend server at http://localhost:5001. Please ensure the backend server is running.');
+      connErr.status = 503;
+      throw connErr;
+    }
     console.error(`[API Error] ${options.method || 'GET'} ${endpoint}:`, error.message);
     throw error;
   }
@@ -49,16 +55,18 @@ async function request(endpoint, options = {}) {
 
 // 1. Authentication APIs
 export const authAPI = {
+  checkHealth: () => request('/health'),
+
   login: (email, password) =>
     request('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email: email.trim(), password })
     }),
 
   register: (name, email, password, role = 'STAFF') =>
     request('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password, role })
+      body: JSON.stringify({ name: name.trim(), email: email.trim(), password, role })
     })
 };
 

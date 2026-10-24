@@ -32,17 +32,39 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [serverStatus, setServerStatus] = useState('checking'); // 'online' | 'offline' | 'checking'
+
+  // Check backend server health on mount
+  React.useEffect(() => {
+    let isMounted = true;
+    const checkServer = async () => {
+      try {
+        const res = await fetch('http://localhost:5001/api/health', { method: 'GET', signal: AbortSignal.timeout(3000) });
+        if (res.ok && isMounted) {
+          setServerStatus('online');
+        } else if (isMounted) {
+          setServerStatus('offline');
+        }
+      } catch {
+        if (isMounted) setServerStatus('offline');
+      }
+    };
+    checkServer();
+    return () => { isMounted = false; };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
+    const cleanEmail = email.trim();
+
     // Validation
-    if (!email.trim()) {
+    if (!cleanEmail) {
       setError('Please provide an email address.');
       return;
     }
-    if (!email.includes('@') || !email.includes('.')) {
+    if (!cleanEmail.includes('@') || !cleanEmail.includes('.')) {
       setError('Please enter a valid email address.');
       return;
     }
@@ -54,22 +76,32 @@ export default function AdminLoginPage() {
     setIsLoading(true);
 
     try {
-      const result = await login(email, password);
+      const result = await login(cleanEmail, password);
       if (result.success) {
         navigate('/admin');
       } else {
         setError(result.message || 'Invalid email or password.');
       }
     } catch (err) {
-      setError(err.message || 'Unable to connect to authentication server.');
+      if (err.message && err.message.toLowerCase().includes('connect')) {
+        setError('Cannot connect to backend server on port 5001. Please run `npm run dev` in your terminal.');
+      } else {
+        setError(err.message || 'Unable to connect to authentication server.');
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDemoFill = () => {
+  const handleAdminDemoFill = () => {
     setEmail('admin@smartqueue.com');
     setPassword('admin123');
+    setError('');
+  };
+
+  const handleStaffDemoFill = () => {
+    setEmail('staff@smartqueue.com');
+    setPassword('staff123');
     setError('');
   };
 
@@ -94,13 +126,42 @@ export default function AdminLoginPage() {
               <p className="text-sm text-slate-500 mt-1">
                 Enter your authorized credentials to access queue operations.
               </p>
+
+              {/* Server Status Pill */}
+              <div className="mt-3 flex items-center justify-center gap-2">
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
+                  serverStatus === 'online' 
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                    : serverStatus === 'offline'
+                    ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                    : 'bg-slate-100 text-slate-600 border border-slate-200'
+                }`}>
+                  <span className={`w-2 h-2 rounded-full ${
+                    serverStatus === 'online' ? 'bg-emerald-500 animate-pulse' : serverStatus === 'offline' ? 'bg-rose-500' : 'bg-slate-400'
+                  }`} />
+                  {serverStatus === 'online' && 'Backend API Connected (Port 5001)'}
+                  {serverStatus === 'offline' && 'Backend Server Offline'}
+                  {serverStatus === 'checking' && 'Checking backend status...'}
+                </span>
+              </div>
             </div>
+
+            {/* Backend Offline Warning */}
+            {serverStatus === 'offline' && (
+              <div className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs leading-relaxed">
+                <p className="font-bold flex items-center gap-1.5 mb-1 text-amber-900">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                  Backend server is not running on port 5001
+                </p>
+                <p>Run <code className="px-1.5 py-0.5 bg-amber-100 rounded text-amber-900 font-mono font-bold">npm run dev</code> in the project directory to start both the backend API and frontend concurrently.</p>
+              </div>
+            )}
 
             {/* Error Message */}
             {error && (
               <div className="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 flex items-start gap-3 text-rose-700 text-sm animate-shake">
                 <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                <span>{error}</span>
+                <span className="leading-snug">{error}</span>
               </div>
             )}
 
@@ -117,7 +178,7 @@ export default function AdminLoginPage() {
                   <input
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => { setEmail(e.target.value); setError(''); }}
                     placeholder="name@smartqueue.com"
                     className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-purple-600 text-sm bg-white"
                   />
@@ -139,7 +200,7 @@ export default function AdminLoginPage() {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => { setPassword(e.target.value); setError(''); }}
                     placeholder="••••••••"
                     className="w-full pl-12 pr-12 py-3 rounded-xl border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-purple-600 text-sm bg-white"
                   />
@@ -177,22 +238,41 @@ export default function AdminLoginPage() {
             {/* Demo Credentials Quick Fill Chip */}
             <div className="mt-8 pt-6 border-t border-slate-100">
               <div className="p-4 rounded-2xl bg-purple-50/80 border border-purple-100/90 text-left">
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-purple-600" />
-                    Demo Credentials
+                    Demo Credentials (1-Click Fill)
                   </span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  {/* Admin Fill Button */}
                   <button
                     type="button"
-                    onClick={handleDemoFill}
-                    className="text-[11px] font-bold text-purple-700 bg-white px-2 py-0.5 rounded shadow-2xs hover:bg-purple-100 transition-colors cursor-pointer border border-purple-200"
+                    onClick={handleAdminDemoFill}
+                    className="p-2.5 rounded-xl bg-white border border-purple-200 hover:border-purple-400 hover:bg-purple-50/50 transition-all text-left shadow-2xs group cursor-pointer"
                   >
-                    Auto-Fill
+                    <div className="flex items-center justify-between font-bold text-slate-800 text-[11px] mb-1">
+                      <span>Administrator</span>
+                      <span className="text-[10px] text-purple-600 group-hover:underline">Fill</span>
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-mono truncate">admin@smartqueue.com</div>
+                    <div className="text-[10px] text-slate-500 font-mono">Pass: admin123</div>
                   </button>
-                </div>
-                <div className="text-xs text-purple-800 font-mono space-y-0.5">
-                  <p>Email: <span className="font-semibold text-slate-900">admin@smartqueue.com</span></p>
-                  <p>Password: <span className="font-semibold text-slate-900">admin123</span></p>
+
+                  {/* Staff Fill Button */}
+                  <button
+                    type="button"
+                    onClick={handleStaffDemoFill}
+                    className="p-2.5 rounded-xl bg-white border border-purple-200 hover:border-purple-400 hover:bg-purple-50/50 transition-all text-left shadow-2xs group cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between font-bold text-slate-800 text-[11px] mb-1">
+                      <span>Staff Member</span>
+                      <span className="text-[10px] text-purple-600 group-hover:underline">Fill</span>
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-mono truncate">staff@smartqueue.com</div>
+                    <div className="text-[10px] text-slate-500 font-mono">Pass: staff123</div>
+                  </button>
                 </div>
               </div>
             </div>

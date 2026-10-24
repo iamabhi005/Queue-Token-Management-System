@@ -73,8 +73,14 @@ const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return next(new AppError('Both email and password are required.', 400));
+    }
+
+    const cleanEmail = email.toString().toLowerCase().trim();
+
     // Retrieve user and check password
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findOne({ email: cleanEmail });
     if (!user) {
       return next(new AppError('Invalid email or password.', 401));
     }
