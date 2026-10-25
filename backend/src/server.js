@@ -11,7 +11,11 @@ process.on('uncaughtException', (err) => {
   process.exit(1);
 });
 
-const PORT = process.env.PORT || 5001;
+// const PORT = process.env.PORT || 5001;
+// server.listen(PORT, "0.0.0.0", () => {
+//   console.log(`SmartQueue API running on port ${PORT}`);
+// });
+
 
 // Connect to MongoDB and start HTTP + Socket.IO server
 connectDB().then(() => {
@@ -20,9 +24,11 @@ connectDB().then(() => {
   // Initialize Socket.IO on the server
   initSocket(server);
 
+  const PORT = process.env.PORT || 5001;
   server.listen(PORT, "0.0.0.0", () => {
     console.log(`SmartQueue API running on port ${PORT}`);
   });
+
 
   // Handle unhandled promise rejections
   process.on('unhandledRejection', (err) => {
