@@ -92,19 +92,20 @@ export default function TokenHistoryPage() {
       <div className="flex-1 lg:pl-64 flex flex-col min-w-0">
         
         {/* Top Header */}
-        <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-8 py-4 flex items-center justify-between">
+        <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsMobileSidebarOpen(true)}
-              className="lg:hidden p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg"
+              className="lg:hidden p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg cursor-pointer"
+              aria-label="Open sidebar menu"
             >
               <Menu className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <h1 className="text-base sm:text-xl font-bold text-slate-900 flex items-center gap-2">
                 <span>Token Audit & History Log</span>
               </h1>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 hidden sm:block">
                 Detailed record of all generated, served, and skipped customer tokens.
               </p>
             </div>
@@ -122,11 +123,11 @@ export default function TokenHistoryPage() {
         </header>
 
         {/* Content */}
-        <main className="p-4 sm:p-8 space-y-6 flex-1">
+        <main className="p-3.5 sm:p-6 lg:p-8 space-y-6 flex-1">
           
           {/* Filters Bar Card */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+          <div className="bg-white rounded-3xl p-4 sm:p-6 border border-slate-200/90 shadow-xs space-y-4">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 sm:gap-4">
               
               {/* Search Box */}
               <div className="relative flex-1 max-w-md">
@@ -144,16 +145,16 @@ export default function TokenHistoryPage() {
               </div>
 
               {/* Status and Service Dropdowns */}
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Status:</span>
+              <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+                <div className="flex items-center gap-2 flex-1 sm:flex-initial">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider shrink-0">Status:</span>
                   <select
                     value={statusFilter}
                     onChange={(e) => {
                       setStatusFilter(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-purple-600 cursor-pointer"
+                    className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl px-2.5 sm:px-3 py-2 text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-purple-600 cursor-pointer w-full sm:w-auto"
                   >
                     <option value="ALL">All Statuses</option>
                     <option value="WAITING">Waiting</option>
@@ -163,15 +164,15 @@ export default function TokenHistoryPage() {
                   </select>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Service:</span>
+                <div className="flex items-center gap-2 flex-1 sm:flex-initial">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider shrink-0">Service:</span>
                   <select
                     value={serviceFilter}
                     onChange={(e) => {
                       setServiceFilter(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-purple-600 cursor-pointer"
+                    className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl px-2.5 sm:px-3 py-2 text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-purple-600 cursor-pointer w-full sm:w-auto"
                   >
                     <option value="ALL">All Services</option>
                     {services.map(s => (
@@ -188,7 +189,7 @@ export default function TokenHistoryPage() {
                       setSearchQuery('');
                       setCurrentPage(1);
                     }}
-                    className="text-xs text-rose-600 hover:underline font-semibold cursor-pointer"
+                    className="text-xs text-rose-600 hover:underline font-semibold cursor-pointer shrink-0"
                   >
                     Clear Filters
                   </button>
@@ -200,14 +201,14 @@ export default function TokenHistoryPage() {
             {/* Quick summary strip */}
             <div className="flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
               <span>Showing {filteredTokens.length} record(s)</span>
-              <span>Sorted by latest creation timestamp</span>
+              <span className="hidden sm:inline">Sorted by latest creation timestamp</span>
             </div>
           </div>
 
           {/* Tokens Table Card */}
           <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
+              <table className="w-full text-left text-sm min-w-[720px]">
                 <thead className="bg-slate-50/70 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-100">
                   <tr>
                     <th className="px-6 py-4">Token #</th>

@@ -9,9 +9,10 @@ const {
   validateCreateToken,
   validateObjectId
 } = require('../middlewares/validate');
+const { tokenCreationLimiter } = require('../middlewares/rateLimiter');
 
 // Public Customer Queue Endpoints
-router.post('/', validateCreateToken, createToken);
+router.post('/', tokenCreationLimiter, validateCreateToken, createToken);
 router.get('/:id', validateObjectId('id'), getTokenById);
 router.get('/status/:id', validateObjectId('id'), getTokenStatus);
 

@@ -8,4 +8,19 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  server: {
+    host: true, // Listen on all network addresses (0.0.0.0)
+    allowedHosts: true, // Allow all tunnel hostnames (localtunnel, cloudflare, ngrok)
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+      },
+      '/socket.io': {
+        target: 'http://localhost:5001',
+        ws: true,
+        changeOrigin: true,
+      }
+    }
+  }
 })

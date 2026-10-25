@@ -12,7 +12,9 @@
     "seed:backend": "npm --prefix backend run seed",
     "test:backend": "node backend/src/utils/testEndpoints.js",
     "build": "npm --prefix frontend run build",
-    "preview": "npm --prefix frontend run preview"
+    "preview": "npm --prefix frontend run preview",
+    "tunnel": "cloudflared tunnel --url http://localhost:5173",
+    "live": "concurrently --kill-others-on-fail -n \"backend,frontend,tunnel\" -c \"cyan,magenta,yellow\" \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\" \"cloudflared tunnel --url http://localhost:5173\""
   },
   "devDependencies": {
     "concurrently": "^10.0.6"

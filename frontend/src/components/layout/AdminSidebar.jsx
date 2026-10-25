@@ -11,7 +11,8 @@ import {
   Radio, 
   RotateCcw,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  X
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useQueue } from '../../context/QueueContext';
@@ -37,16 +38,25 @@ export default function AdminSidebar({ isMobileOpen, setIsMobileOpen }) {
     <div className="flex flex-col h-full bg-slate-900 text-slate-300">
       
       {/* Brand Header */}
-      <div className="p-6 border-b border-slate-800">
+      <div className="p-5 border-b border-slate-800 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-purple-900/30">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-purple-900/30 shrink-0">
             <Ticket className="w-5 h-5 text-white" />
           </div>
           <div>
             <h2 className="text-base font-bold text-white tracking-tight">SmartQueue</h2>
-            <p className="text-[11px] font-medium text-purple-400">Operations Control Center</p>
+            <p className="text-[11px] font-medium text-purple-400">Operations Control</p>
           </div>
         </div>
+        {setIsMobileOpen && (
+          <button
+            onClick={() => setIsMobileOpen(false)}
+            className="lg:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+            aria-label="Close sidebar"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* Active Counter Switcher */}

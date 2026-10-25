@@ -24,13 +24,14 @@ const createToken = async (req, res, next) => {
     }
 
     // Generate collision-free sequential token number atomically
-    const { tokenNumber } = await generateNextTokenNumber(service);
+    const { tokenNumber, dateCode } = await generateNextTokenNumber(service);
 
     // Create the token in database
     const token = await Token.create({
       tokenNumber,
       customerName: customerName.trim(),
       serviceId: service._id,
+      dateCode,
       status: 'WAITING',
       createdAt: new Date()
     });

@@ -46,6 +46,11 @@ const tokenSchema = new mongoose.Schema({
   completedAt: {
     type: Date,
     default: null
+  },
+  dateCode: {
+    type: String,
+    default: () => new Date().toISOString().slice(0, 10),
+    index: true
   }
 }, {
   collection: 'tokens',
@@ -69,7 +74,8 @@ const tokenSchema = new mongoose.Schema({
   }
 });
 
-// Indexes for high performance queue operations
+// Indexes for high performance queue operations & duplicate prevention
+tokenSchema.index({ serviceId: 1, dateCode: 1, tokenNumber: 1 }, { unique: true });
 tokenSchema.index({ serviceId: 1, status: 1, createdAt: 1 });
 tokenSchema.index({ counterId: 1, status: 1 });
 tokenSchema.index({ createdAt: -1 });

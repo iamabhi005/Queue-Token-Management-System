@@ -1,13 +1,15 @@
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 const AppError = require('../utils/AppError');
+const User = require('../models/User');
 
 /**
- * Validates whether a request parameter is a valid 24-char MongoDB ObjectId
+ * Validates whether a request parameter is a valid 24-char hexadecimal MongoDB ObjectId
  */
 const validateObjectId = (paramName = 'id') => {
   return (req, res, next) => {
     const id = req.params[paramName];
-    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+    if (!id || !mongoose.Types.ObjectId.isValid(id) || String(new mongoose.Types.ObjectId(id)) !== id) {
       return next(
         new AppError(
           `Invalid ID format for parameter '${paramName}': "${id}". Expected a 24-character hexadecimal ObjectId.`,
@@ -20,63 +22,179 @@ const validateObjectId = (paramName = 'id') => {
 };
 
 /**
- * Request body validators
+ * Validates registration input and guards against privilege escalation
  */
-const validateRegister = (req, res, next) => {
+const validateRegister = async (req, res, next) => {
   const { name, email, password, role } = req.body;
-  if (!name || typeof name !== 'string' || name.trim().length < 2) {
-    return next(new AppError('Name is required and must be at least 2 characters.', 400));
+
+  if (!name || typeof name !== 'string' || name.trim().length < 2 || name.trim().length > 100) {
+    return next(new AppError('Name is required and must be between 2 and 100 characters.', 400));
   }
-  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-    return next(new AppError('A valid email address is required.', 400));
+
+  const cleanEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+  if (!cleanEmail || cleanEmail.length > 150 || !/^\S+@\S+\.\S+$/.test(cleanEmail)) {
+    return next(new AppError('A valid email address (max 150 characters) is required.', 400));
   }
-  if (!password || password.length < 6) {
-    return next(new AppError('Password is required and must be at least 6 characters.', 400));
+
+  if (!password || typeof password !== 'string' || password.length < 6 || password.length > 128) {
+    return next(new AppError('Password is required and must be between 6 and 128 characters.', 400));
   }
+
   if (role && !['ADMIN', 'STAFF', 'CUSTOMER'].includes(role)) {
     return next(new AppError('Role must be one of ADMIN, STAFF, or CUSTOMER.', 400));
   }
+
+  // Privilege Escalation Guard:
+  // If requesting ADMIN or STAFF role, caller MUST provide valid ADMIN credentials
+  if (role && (role === 'ADMIN' || role === 'STAFF')) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return next(
+        new AppError('Unauthorized: Registering an administrative or staff account requires an active administrator session.', 403)
+      );
+    }
+
+    try {
+      const token = authHeader.split(' ')[1];
+      const secret = process.env.JWT_SECRET || 'smartqueue_dev_jwt_secret_key_2026_super_secure';
+      const decoded = jwt.verify(token, secret);
+      const caller = await User.findById(decoded.id);
+
+      if (!caller || caller.role !== 'ADMIN') {
+        return next(
+          new AppError('Forbidden: Only system administrators can create ADMIN or STAFF accounts.', 403)
+        );
+      }
+      req.adminCaller = caller;
+    } catch {
+      return next(
+        new AppError('Invalid administrator credentials for role escalation.', 403)
+      );
+    }
+  }
+
   next();
 };
 
+/**
+ * Validates login input
+ */
 const validateLogin = (req, res, next) => {
   const { email, password } = req.body;
-  if (!email || !password) {
-    return next(new AppError('Both email and password are required.', 400));
+
+  if (!email || typeof email !== 'string' || !email.trim()) {
+    return next(new AppError('A valid email address is required.', 400));
   }
+
+  if (!password || typeof password !== 'string' || !password) {
+    return next(new AppError('Password is required.', 400));
+  }
+
+  if (email.length > 150 || password.length > 128) {
+    return next(new AppError('Invalid credentials format.', 400));
+  }
+
   next();
 };
 
+/**
+ * Validates customer token generation input
+ */
 const validateCreateToken = (req, res, next) => {
   const { customerName, serviceId } = req.body;
-  if (!customerName || typeof customerName !== 'string' || customerName.trim().length < 2) {
-    return next(new AppError('Customer name is required and must be at least 2 characters.', 400));
+
+  if (!customerName || typeof customerName !== 'string' || customerName.trim().length < 2 || customerName.trim().length > 60) {
+    return next(new AppError('Customer name is required and must be between 2 and 60 characters.', 400));
   }
+
+  // Strip dangerous HTML/script injection tags
+  if (/<[a-z][\s\S]*>/i.test(customerName)) {
+    return next(new AppError('Customer name contains disallowed markup characters.', 400));
+  }
+
   if (!serviceId || !mongoose.Types.ObjectId.isValid(serviceId)) {
     return next(new AppError('A valid 24-character serviceId ObjectId is required.', 400));
   }
+
   next();
 };
 
+/**
+ * Validates calling next token (staff operation)
+ */
+const validateCallNextToken = (req, res, next) => {
+  const { counterId, serviceId } = req.body;
+
+  if (!counterId && !serviceId) {
+    return next(new AppError('Either counterId or serviceId is required to call next token.', 400));
+  }
+
+  if (counterId && !mongoose.Types.ObjectId.isValid(counterId)) {
+    return next(new AppError('counterId must be a valid 24-character hexadecimal ObjectId.', 400));
+  }
+
+  if (serviceId && !mongoose.Types.ObjectId.isValid(serviceId)) {
+    return next(new AppError('serviceId must be a valid 24-character hexadecimal ObjectId.', 400));
+  }
+
+  next();
+};
+
+/**
+ * Validates service creation
+ */
 const validateCreateService = (req, res, next) => {
-  const { name, averageServiceTime } = req.body;
-  if (!name || typeof name !== 'string' || name.trim().length < 2) {
-    return next(new AppError('Service name is required and must be at least 2 characters.', 400));
+  const { name, description, averageServiceTime } = req.body;
+
+  if (!name || typeof name !== 'string' || name.trim().length < 2 || name.trim().length > 80) {
+    return next(new AppError('Service name is required and must be between 2 and 80 characters.', 400));
   }
-  if (averageServiceTime !== undefined && (isNaN(averageServiceTime) || Number(averageServiceTime) < 1)) {
-    return next(new AppError('averageServiceTime must be a number greater than or equal to 1 minute.', 400));
+
+  if (description && (typeof description !== 'string' || description.length > 500)) {
+    return next(new AppError('Service description cannot exceed 500 characters.', 400));
   }
+
+  if (averageServiceTime !== undefined) {
+    const num = Number(averageServiceTime);
+    if (isNaN(num) || num < 1 || num > 480) {
+      return next(new AppError('averageServiceTime must be a number between 1 and 480 minutes.', 400));
+    }
+  }
+
   next();
 };
 
+/**
+ * Validates counter creation
+ */
 const validateCreateCounter = (req, res, next) => {
   const { name, serviceId } = req.body;
-  if (!name || typeof name !== 'string' || name.trim().length < 1) {
-    return next(new AppError('Counter name is required.', 400));
+
+  if (!name || typeof name !== 'string' || name.trim().length < 1 || name.trim().length > 50) {
+    return next(new AppError('Counter name is required and must be between 1 and 50 characters.', 400));
   }
+
   if (!serviceId || !mongoose.Types.ObjectId.isValid(serviceId)) {
     return next(new AppError('A valid 24-character serviceId ObjectId is required.', 400));
   }
+
+  next();
+};
+
+/**
+ * Validates AI chat message
+ */
+const validateChatMessage = (req, res, next) => {
+  const { message } = req.body;
+
+  if (!message || typeof message !== 'string' || !message.trim()) {
+    return next(new AppError('Please provide a valid text message for the AI assistant.', 400));
+  }
+
+  if (message.length > 1000) {
+    return next(new AppError('Chat message is too long (maximum 1,000 characters).', 400));
+  }
+
   next();
 };
 
@@ -85,6 +203,8 @@ module.exports = {
   validateRegister,
   validateLogin,
   validateCreateToken,
+  validateCallNextToken,
   validateCreateService,
-  validateCreateCounter
+  validateCreateCounter,
+  validateChatMessage
 };

@@ -1,10 +1,21 @@
 const AppError = require('../utils/AppError');
 
 /**
+ * Strips sensitive database connection strings, passwords, or filesystem paths
+ */
+const sanitizeErrorMessage = (msg) => {
+  if (!msg || typeof msg !== 'string') return 'An error occurred.';
+  return msg
+    .replace(/mongodb(\+srv)?:\/\/[^\s]+/gi, '[DATABASE_URI_REDACTED]')
+    .replace(/\/Users\/[^\s:]+/g, '[FILEPATH_REDACTED]')
+    .replace(/jwt_secret[^\s,]*/gi, '[SECRET_REDACTED]');
+};
+
+/**
  * Handle Mongoose Invalid ObjectId (CastError)
  */
 const handleCastErrorDB = (err) => {
-  const message = `Invalid ${err.path}: "${err.value}". Expected a valid ObjectId.`;
+  const message = `Invalid ${err.path}: "${err.value}". Expected a valid 24-character hexadecimal ObjectId.`;
   return new AppError(message, 400);
 };
 
@@ -14,7 +25,7 @@ const handleCastErrorDB = (err) => {
 const handleDuplicateFieldsDB = (err) => {
   const field = Object.keys(err.keyValue || {})[0] || 'field';
   const value = err.keyValue ? err.keyValue[field] : '';
-  const message = `Duplicate value '${value}' for field '${field}'. Please use another value.`;
+  const message = `Duplicate value '${value}' for field '${field}'. A unique record already exists.`;
   return new AppError(message, 409);
 };
 
@@ -22,7 +33,7 @@ const handleDuplicateFieldsDB = (err) => {
  * Handle Mongoose Schema Validation Errors
  */
 const handleValidationErrorDB = (err) => {
-  const errors = Object.values(err.errors).map(el => el.message);
+  const errors = Object.values(err.errors || {}).map(el => el.message);
   const message = `Validation error: ${errors.join('. ')}`;
   return new AppError(message, 400);
 };
@@ -30,12 +41,17 @@ const handleValidationErrorDB = (err) => {
 /**
  * Centralized Error Handling Middleware
  */
-const errorHandler = (err, req, res, next) => {
+const errorHandler = (err, req, res, next) => { // eslint-disable-line no-unused-vars
   let error = { ...err };
   error.message = err.message;
   error.name = err.name;
-  error.statusCode = err.statusCode || 500;
-  error.status = err.status || 'error';
+  error.statusCode = err.statusCode || (err.status && typeof err.status === 'number' ? err.status : 500);
+  error.status = `${error.statusCode}`.startsWith('4') ? 'fail' : 'error';
+
+  // Handle malformed JSON body
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    error = new AppError('Malformed JSON payload received.', 400);
+  }
 
   // Specific database error normalization
   if (err.name === 'CastError') error = handleCastErrorDB(err);
@@ -44,15 +60,20 @@ const errorHandler = (err, req, res, next) => {
   if (err.name === 'JsonWebTokenError') error = new AppError('Invalid authentication token.', 401);
   if (err.name === 'TokenExpiredError') error = new AppError('Authentication token has expired.', 401);
 
-  // Development vs Production response formatting
+  // Safe message formatting
+  const isOperational = error.isOperational || error.statusCode < 500;
+  const safeMessage = isOperational
+    ? sanitizeErrorMessage(error.message)
+    : 'An unexpected internal server error occurred. Please try again later.';
+
   const response = {
     success: false,
     status: error.status,
-    message: error.message || 'An unexpected internal server error occurred.'
+    message: safeMessage
   };
 
-  if (process.env.NODE_ENV === 'development') {
-    response.stack = err.stack;
+  // Only attach debug details in local development for operational inspection
+  if (process.env.NODE_ENV === 'development' && isOperational) {
     response.originalError = err.name;
   }
 
@@ -68,5 +89,6 @@ const notFoundHandler = (req, res, next) => {
 
 module.exports = {
   errorHandler,
-  notFoundHandler
+  notFoundHandler,
+  sanitizeErrorMessage
 };

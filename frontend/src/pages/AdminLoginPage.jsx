@@ -39,7 +39,8 @@ export default function AdminLoginPage() {
     let isMounted = true;
     const checkServer = async () => {
       try {
-        const res = await fetch('http://localhost:5001/api/health', { method: 'GET', signal: AbortSignal.timeout(3000) });
+        const apiUrl = import.meta.env.VITE_API_URL || '/api';
+        const res = await fetch(`${apiUrl}/health`, { method: 'GET', signal: AbortSignal.timeout(3000) });
         if (res.ok && isMounted) {
           setServerStatus('online');
         } else if (isMounted) {
@@ -113,7 +114,7 @@ export default function AdminLoginPage() {
         <div className="w-full max-w-md">
           
           {/* Main Card */}
-          <div className="bg-white rounded-3xl p-8 sm:p-10 border border-slate-200/90 shadow-xl shadow-slate-200/50">
+          <div className="bg-white rounded-3xl p-6 sm:p-10 border border-slate-200/90 shadow-xl shadow-slate-200/50">
             
             {/* Header Icon & Title */}
             <div className="text-center mb-8">
@@ -123,7 +124,7 @@ export default function AdminLoginPage() {
               <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                 Staff & Admin Portal
               </h1>
-              <p className="text-sm text-slate-500 mt-1">
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
                 Enter your authorized credentials to access queue operations.
               </p>
 
@@ -245,7 +246,7 @@ export default function AdminLoginPage() {
                   </span>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                   {/* Admin Fill Button */}
                   <button
                     type="button"

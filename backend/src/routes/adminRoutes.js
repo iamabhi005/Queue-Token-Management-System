@@ -4,7 +4,8 @@ const { verifyToken, requireRole } = require('../middlewares/auth');
 const {
   validateObjectId,
   validateCreateService,
-  validateCreateCounter
+  validateCreateCounter,
+  validateCallNextToken
 } = require('../middlewares/validate');
 
 const {
@@ -28,7 +29,7 @@ router.use(requireRole('ADMIN', 'STAFF'));
 // Queue Monitoring & Management Endpoints
 router.get('/tokens', getTokens);
 router.get('/stats', getStats);
-router.post('/tokens/next', callNextToken);
+router.post('/tokens/next', validateCallNextToken, callNextToken);
 router.patch('/tokens/:id/complete', validateObjectId('id'), completeToken);
 router.patch('/tokens/:id/skip', validateObjectId('id'), skipToken);
 

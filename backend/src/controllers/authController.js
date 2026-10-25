@@ -35,11 +35,14 @@ const register = async (req, res, next) => {
     const salt = await bcrypt.genSalt(12);
     const passwordHash = await bcrypt.hash(password, salt);
 
+    // If caller is authenticated as ADMIN, allow role specification; otherwise default to CUSTOMER
+    const assignedRole = req.adminCaller ? (role || 'STAFF') : 'CUSTOMER';
+
     const newUser = await User.create({
       name: name.trim(),
       email: email.toLowerCase().trim(),
       passwordHash,
-      role: role || 'STAFF'
+      role: assignedRole
     });
 
     // Record in audit log dataset
@@ -79,8 +82,8 @@ const login = async (req, res, next) => {
 
     const cleanEmail = email.toString().toLowerCase().trim();
 
-    // Retrieve user and check password
-    const user = await User.findOne({ email: cleanEmail });
+    // Retrieve user including hidden passwordHash for comparison
+    const user = await User.findOne({ email: cleanEmail }).select('+passwordHash');
     if (!user) {
       return next(new AppError('Invalid email or password.', 401));
     }

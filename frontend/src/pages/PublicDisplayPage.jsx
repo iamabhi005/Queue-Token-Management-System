@@ -61,40 +61,40 @@ export default function PublicDisplayPage() {
     <div className="min-h-screen bg-[#070d1e] text-white flex flex-col font-sans select-none overflow-x-hidden">
       
       {/* Top TV Screen Bar */}
-      <header className="px-6 py-4 bg-[#0c152e] border-b border-indigo-950/80 flex items-center justify-between shadow-md">
+      <header className="px-3.5 sm:px-6 py-3 sm:py-4 bg-[#0c152e] border-b border-indigo-950/80 flex items-center justify-between shadow-md gap-2">
         
         {/* Brand & Live status */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <Link
             to="/"
-            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors flex items-center gap-1.5 text-xs font-semibold"
+            className="p-1.5 sm:p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors flex items-center gap-1.5 text-xs font-semibold"
             title="Return to Home"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Exit Display</span>
+            <span className="hidden sm:inline">Exit</span>
           </Link>
 
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-600/30">
-              <Tv className="w-5 h-5 text-white" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-600/30 shrink-0">
+              <Tv className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-black tracking-tight text-white flex items-center gap-2">
-                SmartQueue <span className="text-purple-400 font-bold">Public Display</span>
+              <h1 className="text-xs sm:text-base lg:text-lg font-black tracking-tight text-white flex items-center gap-1.5 sm:gap-2">
+                SmartQueue <span className="text-purple-400 font-bold hidden xs:inline">Display</span>
               </h1>
-              <p className="text-[11px] text-slate-400">Live Customer Calling & Hall Monitor</p>
+              <p className="text-[10px] sm:text-[11px] text-slate-400 hidden sm:block">Live Calling & Hall Monitor</p>
             </div>
           </div>
         </div>
 
         {/* Center Live Badge */}
-        <div className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 text-xs font-bold uppercase tracking-wider">
+        <div className="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 text-xs font-bold uppercase tracking-wider">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
           <span>Broadcasting Live</span>
         </div>
 
         {/* Right Utility Controls & Clock */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           
           {/* Audio Chime test button */}
           <button
@@ -103,24 +103,24 @@ export default function PublicDisplayPage() {
             title="Test Sound / Announcement"
           >
             <Volume2 className="w-4 h-4" />
-            <span>Test Sound</span>
+            <span className="hidden md:inline">Test Sound</span>
           </button>
 
           {/* Fullscreen Button */}
           <button
             onClick={toggleFullscreen}
-            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
+            className="p-1.5 sm:p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-colors cursor-pointer"
             title="Toggle TV Fullscreen (F11)"
           >
-            {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+            {isFullscreen ? <Minimize2 className="w-4 h-4 sm:w-5 sm:h-5" /> : <Maximize2 className="w-4 h-4 sm:w-5 sm:h-5" />}
           </button>
 
           {/* Live Digital Clock */}
-          <div className="text-right pl-3 border-l border-indigo-950">
-            <p className="text-lg font-black font-mono-num text-purple-300 leading-tight">
+          <div className="text-right pl-2 sm:pl-3 border-l border-indigo-950">
+            <p className="text-sm sm:text-lg font-black font-mono-num text-purple-300 leading-tight">
               {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </p>
-            <p className="text-[10px] text-slate-400 uppercase font-semibold">
+            <p className="text-[9px] sm:text-[10px] text-slate-400 uppercase font-semibold">
               {currentTime.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
             </p>
           </div>
@@ -130,42 +130,42 @@ export default function PublicDisplayPage() {
       </header>
 
       {/* Main Display Grid */}
-      <main className="flex-1 p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+      <main className="flex-1 p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-stretch">
         
         {/* Left 8 Cols: NOW SERVING MAIN STAGE */}
-        <div className="lg:col-span-8 flex flex-col justify-between space-y-6">
+        <div className="lg:col-span-8 flex flex-col justify-between space-y-5 sm:space-y-6">
           
           {/* Main Giant Callout Banner */}
-          <div className="relative rounded-3xl p-8 sm:p-12 bg-gradient-to-br from-indigo-950 via-[#101b3b] to-purple-950 border-2 border-purple-500/30 shadow-2xl flex flex-col justify-center items-center text-center overflow-hidden">
+          <div className="relative rounded-3xl p-6 sm:p-10 md:p-12 bg-gradient-to-br from-indigo-950 via-[#101b3b] to-purple-950 border-2 border-purple-500/30 shadow-2xl flex flex-col justify-center items-center text-center overflow-hidden">
             
             {/* Ambient background light */}
             <div className="absolute inset-0 bg-radial-gradient from-purple-500/15 via-transparent to-transparent pointer-events-none" />
 
-            <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full text-xs font-extrabold uppercase tracking-widest bg-purple-500/20 text-purple-300 border border-purple-500/40 mb-3">
-              <BellRing className="w-4 h-4 text-purple-400 animate-bounce" />
+            <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1 rounded-full text-[10px] sm:text-xs font-extrabold uppercase tracking-widest bg-purple-500/20 text-purple-300 border border-purple-500/40 mb-3">
+              <BellRing className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-400 animate-bounce" />
               <span>Now Calling</span>
             </div>
 
-            <p className="text-sm font-semibold uppercase tracking-widest text-slate-400 mb-2">
+            <p className="text-xs sm:text-sm font-semibold uppercase tracking-widest text-slate-400 mb-2">
               Please Proceed To Assigned Station
             </p>
 
             {/* Giant Token Text */}
-            <div className="my-2">
-              <h2 className="text-7xl sm:text-8xl md:text-9xl font-black font-mono-num tracking-tight text-white drop-shadow-[0_0_35px_rgba(168,85,247,0.45)]">
+            <div className="my-1 sm:my-2">
+              <h2 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black font-mono-num tracking-tight text-white drop-shadow-[0_0_35px_rgba(168,85,247,0.45)]">
                 {latestServingToken?.tokenNumber || 'A-101'}
               </h2>
             </div>
 
             {/* Destination Counter */}
-            <div className="mt-4 px-8 py-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 flex items-center gap-3">
-              <span className="text-xs uppercase tracking-wider text-slate-300">Proceed to:</span>
-              <span className="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight">
+            <div className="mt-3 sm:mt-4 px-4 sm:px-8 py-2.5 sm:py-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 flex items-center gap-2 sm:gap-3">
+              <span className="text-[11px] sm:text-xs uppercase tracking-wider text-slate-300">Proceed to:</span>
+              <span className="text-xl sm:text-2xl md:text-3xl font-black text-emerald-400 tracking-tight">
                 {latestServingToken?.counterNumber || (typeof latestServingToken?.counterId === 'object' ? latestServingToken?.counterId?.name : '') || 'Counter 1'}
               </span>
             </div>
 
-            <p className="text-xs text-purple-300 mt-4 font-medium">
+            <p className="text-[11px] sm:text-xs text-purple-300 mt-3 sm:mt-4 font-medium px-2">
               Service: <strong className="text-white">{latestServingToken?.serviceName || (typeof latestServingToken?.serviceId === 'object' ? latestServingToken?.serviceId?.name : '') || 'General Banking & Cashier'}</strong>
             </p>
 
@@ -178,7 +178,7 @@ export default function PublicDisplayPage() {
               <span>All Active Service Counters</span>
             </h3>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
               {counters.map((c) => {
                 // Handle both raw string ID and populated object
                 const resolveId = (v) => v && typeof v === 'object' ? (v.id || v._id) : v;

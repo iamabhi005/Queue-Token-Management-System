@@ -140,23 +140,23 @@ export default function AIChatWidget() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 font-sans">
+    <div className="fixed bottom-3 right-3 sm:bottom-6 sm:right-6 z-50 font-sans">
       
       {/* Floating Chat Launcher Button */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="group relative flex items-center gap-3 px-4 py-3.5 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 text-white shadow-xl shadow-purple-600/30 hover:shadow-2xl hover:shadow-purple-600/50 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
+          className="group relative flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 text-white shadow-xl shadow-purple-600/30 hover:shadow-2xl hover:shadow-purple-600/50 hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
           aria-label="Open SmartQueue AI Assistant"
         >
-          <span className="relative flex h-3.5 w-3.5">
+          <span className="relative flex h-3 w-3 sm:h-3.5 sm:w-3.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-400 border-2 border-white"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 sm:h-3.5 sm:w-3.5 bg-emerald-400 border-2 border-white"></span>
           </span>
 
-          <div className="flex items-center gap-2">
-            <Bot className="w-5 h-5 text-white animate-pulse" />
-            <span className="text-sm font-bold tracking-wide">Queue AI</span>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-white animate-pulse" />
+            <span className="text-xs sm:text-sm font-bold tracking-wide">Queue AI</span>
           </div>
 
           <span className="hidden sm:inline-block text-xs bg-white/20 px-2 py-0.5 rounded-full font-medium backdrop-blur-xs">
@@ -167,7 +167,7 @@ export default function AIChatWidget() {
 
       {/* Expanded Chat Drawer */}
       {isOpen && (
-        <div className="w-[92vw] sm:w-[400px] h-[550px] max-h-[82vh] bg-white rounded-3xl shadow-2xl border border-slate-200/90 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="w-[calc(100vw-1.5rem)] sm:w-[400px] h-[520px] max-h-[85vh] bg-white rounded-3xl shadow-2xl border border-slate-200/90 flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           
           {/* Header */}
           <div className="px-5 py-4 bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900 text-white flex items-center justify-between border-b border-purple-800/40">

@@ -37,23 +37,23 @@ export default function StatCard({ title, value, icon: Icon, changeText, color =
   const style = colorStyles[color] || colorStyles.blue;
 
   return (
-    <div className={`group bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs hover:shadow-md transition-all duration-200 ${style.ring}`}>
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">
+    <div className={`group bg-white rounded-2xl p-4 sm:p-6 border border-slate-200/80 shadow-xs hover:shadow-md transition-all duration-200 ${style.ring}`}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1 truncate">
             {title}
           </p>
-          <h3 className="text-3xl font-extrabold text-slate-900 tracking-tight font-mono-num">
+          <h3 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight font-mono-num truncate">
             {value}
           </h3>
         </div>
-        <div className={`p-3 rounded-xl ${style.bg} ${style.text} border ${style.border}`}>
-          {Icon && <Icon className="w-6 h-6" />}
+        <div className={`p-2.5 sm:p-3 rounded-xl ${style.bg} ${style.text} border ${style.border} shrink-0`}>
+          {Icon && <Icon className="w-5 h-5 sm:w-6 sm:h-6" />}
         </div>
       </div>
       {changeText && (
-        <div className="mt-3 flex items-center text-xs text-slate-500">
-          <span>{changeText}</span>
+        <div className="mt-2.5 sm:mt-3 flex items-center text-[11px] sm:text-xs text-slate-500 truncate">
+          <span className="truncate">{changeText}</span>
         </div>
       )}
     </div>

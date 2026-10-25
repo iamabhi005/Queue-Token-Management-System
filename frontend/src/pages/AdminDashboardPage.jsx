@@ -132,36 +132,37 @@ export default function AdminDashboardPage() {
       <div className="flex-1 lg:pl-64 flex flex-col min-w-0">
         
         {/* Top Operational Header */}
-        <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-8 py-3.5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3">
             <button
               onClick={() => setIsMobileSidebarOpen(true)}
-              className="lg:hidden p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg"
+              className="lg:hidden p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg cursor-pointer"
+              aria-label="Open sidebar menu"
             >
               <Menu className="w-5 h-5" />
             </button>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold text-slate-900">Operations Console</h1>
-                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <h1 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight">Operations Console</h1>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                   Live Sync
                 </span>
               </div>
-              <p className="text-xs text-slate-500 hidden sm:block">
+              <p className="text-[11px] sm:text-xs text-slate-500 hidden sm:block">
                 Welcome back, {user?.name || 'Administrator'} • {activeCounter?.name}
               </p>
             </div>
           </div>
 
           {/* Quick Counter Selector & Status Pill */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
-              <span className="text-xs font-semibold text-slate-500 px-2 hidden md:inline">Station:</span>
+          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-end">
+            <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 flex-1 sm:flex-initial">
+              <span className="text-[11px] sm:text-xs font-semibold text-slate-500 px-1.5 hidden md:inline">Station:</span>
               <select
                 value={activeCounterId}
                 onChange={(e) => setActiveCounterId(e.target.value)}
-                className="text-xs font-bold text-slate-800 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 shadow-2xs focus:outline-hidden cursor-pointer"
+                className="text-xs font-bold text-slate-800 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 shadow-2xs focus:outline-hidden cursor-pointer w-full sm:w-auto"
               >
                 {counters.map(c => (
                   <option key={c.id} value={c.id}>
@@ -171,7 +172,7 @@ export default function AdminDashboardPage() {
               </select>
             </div>
 
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0">
               <button
                 onClick={() => setCounterStatus(activeCounterId, 'OPEN')}
                 className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
@@ -198,22 +199,22 @@ export default function AdminDashboardPage() {
 
         {/* Action Feedback Banner */}
         {actionFeedback && (
-          <div className={`mx-4 sm:mx-8 mt-4 p-4 rounded-2xl flex items-center gap-3 text-sm font-semibold transition-all shadow-sm ${
+          <div className={`mx-4 sm:mx-6 lg:mx-8 mt-4 p-3.5 sm:p-4 rounded-2xl flex items-center gap-3 text-xs sm:text-sm font-semibold transition-all shadow-sm ${
             actionFeedback.type === 'success'
               ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
               : actionFeedback.type === 'warning'
               ? 'bg-amber-50 text-amber-800 border border-amber-200'
               : 'bg-blue-50 text-blue-800 border border-blue-200'
           }`}>
-            <BellRing className="w-5 h-5 shrink-0" />
+            <BellRing className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
             <span>{actionFeedback.message}</span>
           </div>
         )}
 
-        <main className="p-4 sm:p-8 space-y-8 flex-1">
+        <main className="p-3.5 sm:p-6 lg:p-8 space-y-6 sm:space-y-8 flex-1">
           
           {/* 1. KEY METRIC STAT CARDS */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
             <StatCard
               title="Total Tokens"
               value={totalToday}
@@ -242,40 +243,42 @@ export default function AdminDashboardPage() {
               color="blue"
               changeText="Turnaround finalized"
             />
-            <StatCard
-              title="Avg Waiting Time"
-              value={`~${avgWaitMinutes}m`}
-              icon={Clock}
-              color="rose"
-              changeText="Rolling SLA window"
-            />
+            <div className="col-span-2 sm:col-span-1 md:col-span-1">
+              <StatCard
+                title="Avg Waiting Time"
+                value={`~${avgWaitMinutes}m`}
+                icon={Clock}
+                color="rose"
+                changeText="Rolling SLA window"
+              />
+            </div>
           </div>
 
           {/* 2. OPERATIONAL TERMINAL: NOW SERVING & QUICK ACTIONS */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
             {/* Left: Active Station Call Card (7 cols) */}
-            <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs flex flex-col justify-between">
+            <div className="lg:col-span-7 bg-white rounded-3xl p-5 sm:p-8 border border-slate-200/90 shadow-xs flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 gap-1.5">
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-purple-600"></span>
-                    <h2 className="text-base font-bold text-slate-900">
-                      Active Station Terminal ({activeCounter?.name || activeCounter?.number || 'Counter'})
+                    <span className="w-2.5 h-2.5 rounded-full bg-purple-600 shrink-0"></span>
+                    <h2 className="text-sm sm:text-base font-bold text-slate-900 truncate">
+                      Active Station ({activeCounter?.name || activeCounter?.number || 'Counter'})
                     </h2>
                   </div>
-                  <span className="text-xs font-medium text-slate-500">
+                  <span className="text-[11px] sm:text-xs font-medium text-slate-500">
                     Assigned: <strong className="text-slate-800">{activeCounter?.name}</strong>
                   </span>
                 </div>
 
                 {/* Big Serving Display */}
-                <div className="my-6 p-6 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-md">
+                <div className="my-5 sm:my-6 p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white flex flex-col sm:flex-row items-center justify-between gap-5 sm:gap-6 shadow-md text-center sm:text-left">
                   <div>
                     <span className="text-xs font-bold uppercase tracking-wider text-purple-300">
                       Currently Serving
                     </span>
-                    <h3 className="text-4xl sm:text-5xl font-black font-mono-num tracking-tight mt-1 text-white">
+                    <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black font-mono-num tracking-tight mt-1 text-white">
                       {currentCounterServingToken?.tokenNumber || '— NO TOKEN —'}
                     </h3>
                     <p className="text-xs text-slate-300 mt-1">
@@ -402,31 +405,31 @@ export default function AdminDashboardPage() {
           <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
             
             {/* Table Header Controls */}
-            <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h3 className="text-lg font-bold text-slate-900">Recent Token Activity</h3>
+                <h3 className="text-base sm:text-lg font-bold text-slate-900">Recent Token Activity</h3>
                 <p className="text-xs text-slate-500">Real-time lifecycle log across all service categories.</p>
               </div>
 
               {/* Filters & Search */}
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="relative">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 w-full md:w-auto">
+                <div className="relative flex-1 sm:flex-initial">
                   <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search customer / token..."
-                    className="pl-9 pr-3 py-1.5 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-purple-600 bg-slate-50"
+                    className="w-full sm:w-56 pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-purple-600 bg-slate-50"
                   />
                 </div>
 
-                <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+                <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-semibold overflow-x-auto max-w-full no-scrollbar">
                   {['ALL', 'WAITING', 'SERVING', 'COMPLETED', 'SKIPPED'].map((f) => (
                     <button
                       key={f}
                       onClick={() => setTableFilter(f)}
-                      className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                      className={`px-2.5 sm:px-3 py-1 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
                         tableFilter === f
                           ? 'bg-white text-slate-900 shadow-2xs font-bold'
                           : 'text-slate-600 hover:text-slate-900'
@@ -441,7 +444,7 @@ export default function AdminDashboardPage() {
 
             {/* Table */}
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
+              <table className="w-full text-left text-sm min-w-[700px]">
                 <thead className="bg-slate-50/70 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-100">
                   <tr>
                     <th className="px-6 py-3.5">Token #</th>

@@ -221,30 +221,30 @@ export default function CustomerTokenPage() {
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex justify-center mb-8">
-          <div className="bg-white p-1.5 rounded-2xl border border-slate-200/90 shadow-xs inline-flex gap-1">
+        <div className="flex justify-center mb-6 sm:mb-8 px-2">
+          <div className="bg-white p-1 rounded-2xl border border-slate-200/90 shadow-xs w-full max-w-sm sm:max-w-md grid grid-cols-2 gap-1">
             <button
               onClick={() => setActiveTab('generate')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+              className={`flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                 activeTab === 'generate'
                   ? 'bg-purple-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
-              <Ticket className="w-4 h-4" />
-              <span>Issue New Token</span>
+              <Ticket className="w-4 h-4 shrink-0" />
+              <span className="truncate">Issue Token</span>
             </button>
 
             <button
               onClick={() => setActiveTab('track')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+              className={`flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                 activeTab === 'track'
                   ? 'bg-purple-600 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
-              <Search className="w-4 h-4" />
-              <span>Check Existing Token</span>
+              <Search className="w-4 h-4 shrink-0" />
+              <span className="truncate">Track Token</span>
             </button>
           </div>
         </div>
@@ -461,26 +461,26 @@ export default function CustomerTokenPage() {
             ) : (
               /* Generated Token Slip Presentation */
               <div className="max-w-md mx-auto">
-                <div className="bg-white rounded-3xl p-8 border-2 border-purple-200 shadow-xl relative overflow-hidden">
+                <div className="bg-white rounded-3xl p-5 sm:p-8 border-2 border-purple-200 shadow-xl relative overflow-hidden">
                   
                   {/* Decorative background header */}
                   <div className="absolute top-0 left-0 right-0 h-3 bg-gradient-to-r from-purple-600 to-indigo-600" />
 
                   {/* Header */}
-                  <div className="text-center pt-2 pb-6 border-b border-dashed border-slate-200">
+                  <div className="text-center pt-2 pb-5 border-b border-dashed border-slate-200">
                     <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 mb-2">
                       ✓ Token Successfully Issued
                     </span>
-                    <h2 className="text-xl font-bold text-slate-900">SmartQueue Digital Pass</h2>
+                    <h2 className="text-lg sm:text-xl font-bold text-slate-900">SmartQueue Digital Pass</h2>
                     <p className="text-xs text-slate-500 mt-1">{generatedToken.serviceName}</p>
                   </div>
 
                   {/* Big Token Number Display */}
-                  <div className="py-8 text-center bg-slate-50/80 rounded-2xl my-6 border border-slate-100">
+                  <div className="py-6 sm:py-8 text-center bg-slate-50/80 rounded-2xl my-5 sm:my-6 border border-slate-100">
                     <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">
                       Your Token Number
                     </p>
-                    <p className="text-5xl sm:text-6xl font-black text-slate-900 tracking-tight font-mono-num text-purple-700">
+                    <p className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tight font-mono-num text-purple-700">
                       {generatedToken.tokenNumber}
                     </p>
                     {generatedToken.priority === 'PRIORITY' && (
@@ -524,7 +524,7 @@ export default function CustomerTokenPage() {
 
                     <div className="flex items-center justify-between text-slate-600 pt-2 border-t border-slate-100">
                       <span className="text-xs text-slate-400">Customer Name:</span>
-                      <span className="font-medium text-slate-700 text-xs">{generatedToken.customerName}</span>
+                      <span className="font-medium text-slate-700 text-xs truncate max-w-[180px]">{generatedToken.customerName}</span>
                     </div>
 
                     <div className="flex items-center justify-between text-slate-600">
@@ -536,21 +536,21 @@ export default function CustomerTokenPage() {
                   </div>
 
                   {/* QR Simulation */}
-                  <div className="mt-6 pt-6 border-t border-dashed border-slate-200 flex items-center justify-between p-3 rounded-xl bg-slate-50">
+                  <div className="mt-5 sm:mt-6 pt-5 sm:pt-6 border-t border-dashed border-slate-200 flex items-center justify-between p-3 rounded-xl bg-slate-50">
                     <div className="flex items-center gap-3">
-                      <QrCode className="w-10 h-10 text-slate-800" />
+                      <QrCode className="w-9 h-9 sm:w-10 sm:h-10 text-slate-800 shrink-0" />
                       <div className="text-left">
                         <p className="text-xs font-bold text-slate-800">Scan to Track on Phone</p>
                         <p className="text-[10px] text-slate-500">Live SMS & Audio alerts</p>
                       </div>
                     </div>
-                    <span className="text-[11px] font-mono-num bg-slate-200 px-2 py-1 rounded text-slate-700 font-semibold">
+                    <span className="text-[11px] font-mono-num bg-slate-200 px-2 py-1 rounded text-slate-700 font-semibold shrink-0">
                       #{(generatedToken.id || generatedToken._id || '').slice(-6)}
                     </span>
                   </div>
 
                   {/* Actions */}
-                  <div className="mt-6 flex gap-3">
+                  <div className="mt-6 flex flex-col sm:flex-row gap-2.5 sm:gap-3">
                     <button
                       onClick={handlePrint}
                       className="flex-1 py-3 px-4 rounded-xl text-sm font-semibold bg-slate-100 text-slate-800 hover:bg-slate-200 flex items-center justify-center gap-2 transition-colors cursor-pointer"
@@ -585,13 +585,13 @@ export default function CustomerTokenPage() {
         {/* TAB 2: TRACK EXISTING TOKEN */}
         {activeTab === 'track' && (
           <div className="max-w-2xl mx-auto">
-            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xs">
-              <h2 className="text-xl font-bold text-slate-900 mb-2">Check Live Queue Status</h2>
-              <p className="text-sm text-slate-500 mb-6">
+            <div className="bg-white rounded-3xl p-5 sm:p-8 border border-slate-200/90 shadow-xs">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">Check Live Queue Status</h2>
+              <p className="text-xs sm:text-sm text-slate-500 mb-6">
                 Enter your issued token number (e.g. <span className="font-mono-num font-bold text-purple-600">A-101</span>, <span className="font-mono-num font-bold text-purple-600">B-102</span>) to see your real-time waiting position.
               </p>
 
-              <form onSubmit={handleSearch} className="flex gap-2 mb-6">
+              <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2.5 mb-6">
                 <div className="relative flex-1">
                   <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
                   <input
@@ -604,9 +604,9 @@ export default function CustomerTokenPage() {
                 </div>
                 <button
                   type="submit"
-                  className="px-6 py-3.5 rounded-xl bg-purple-600 text-white font-semibold text-sm hover:bg-purple-700 transition-colors cursor-pointer shadow-sm"
+                  className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-purple-600 text-white font-semibold text-sm hover:bg-purple-700 transition-colors cursor-pointer shadow-sm"
                 >
-                  Track
+                  Track Status
                 </button>
               </form>
 

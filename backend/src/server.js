@@ -16,13 +16,12 @@ const PORT = process.env.PORT || 5001;
 // Connect to MongoDB and start HTTP + Socket.IO server
 connectDB().then(() => {
   const server = http.createServer(app);
-  
+
   // Initialize Socket.IO on the server
   initSocket(server);
 
-  server.listen(PORT, () => {
-    console.log(`[SmartQueue API] HTTP + Socket.IO server listening on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode.`);
-    console.log(`[SmartQueue API] Health check ready at: http://localhost:${PORT}/api/health`);
+  server.listen(PORT, "0.0.0.0", () => {
+    console.log(`SmartQueue API running on port ${PORT}`);
   });
 
   // Handle unhandled promise rejections

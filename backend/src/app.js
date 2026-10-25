@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const AppError = require('./utils/AppError');
 
 const authRoutes = require('./routes/authRoutes');
 const tokenRoutes = require('./routes/tokenRoutes');
@@ -19,22 +20,29 @@ app.use(helmet({
   crossOriginResourcePolicy: false,
 }));
 
-// Robust CORS allowing any localhost / 127.0.0.1 port (5173, 5174, 5175, etc.) and configured CLIENT_URL
+// Allowed origin validator (Local dev ports, configured CLIENT_URL, Cloudflare tunnels)
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true; // Server-to-server, curl, testing tools
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
+  if (process.env.CLIENT_URL && origin === process.env.CLIENT_URL) return true;
+  if (/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(origin)) return true;
+  return false;
+};
+
+// Strict CORS configuration for approved frontend origins
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow non-browser requests (Postman, curl, server-to-server)
-    if (!origin) return callback(null, true);
-    // Allow any localhost or 127.0.0.1 origin regardless of port
-    if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) || origin === process.env.CLIENT_URL) {
+    if (isAllowedOrigin(origin)) {
       return callback(null, true);
     }
-    return callback(null, true);
+    return callback(new AppError(`Origin '${origin}' not permitted by CORS security policy.`, 403));
   },
   credentials: true
 }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Body parsing with safe size limits to prevent denial-of-service
+app.use(express.json({ limit: '100kb' }));
+app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('dev'));

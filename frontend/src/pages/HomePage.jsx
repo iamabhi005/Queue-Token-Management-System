@@ -61,10 +61,10 @@ export default function HomePage() {
             </p>
 
             {/* Primary Action Buttons */}
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+            <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3 sm:gap-4 w-full">
               <Link
                 to="/customer"
-                className="flex items-center gap-2.5 px-6 py-3.5 rounded-xl text-base font-bold bg-purple-600 text-white hover:bg-purple-700 shadow-lg shadow-purple-600/25 hover:shadow-purple-600/40 transition-all hover:-translate-y-0.5"
+                className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl text-sm sm:text-base font-bold bg-purple-600 text-white hover:bg-purple-700 shadow-lg shadow-purple-600/25 hover:shadow-purple-600/40 transition-all hover:-translate-y-0.5 cursor-pointer"
               >
                 <Ticket className="w-5 h-5 text-purple-200" />
                 <span>Generate Token</span>
@@ -72,7 +72,7 @@ export default function HomePage() {
 
               <Link
                 to="/customer?tab=check"
-                className="flex items-center gap-2 px-6 py-3.5 rounded-xl text-base font-semibold bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200 transition-all"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm sm:text-base font-semibold bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200 transition-all cursor-pointer"
               >
                 <Search className="w-5 h-5 text-slate-500" />
                 <span>Check Token Status</span>
@@ -80,7 +80,7 @@ export default function HomePage() {
 
               <Link
                 to="/login"
-                className="flex items-center gap-2 px-6 py-3.5 rounded-xl text-base font-semibold bg-slate-900 text-white hover:bg-slate-800 shadow-md transition-all"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm sm:text-base font-semibold bg-slate-900 text-white hover:bg-slate-800 shadow-md transition-all cursor-pointer"
               >
                 <ShieldCheck className="w-5 h-5 text-purple-400" />
                 <span>Admin Login</span>
@@ -88,7 +88,7 @@ export default function HomePage() {
             </div>
 
             {/* Public display callout */}
-            <div className="mt-6 flex items-center justify-center gap-2 text-xs text-slate-500">
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 text-xs text-slate-500 text-center">
               <span>Looking for the TV screen view?</span>
               <Link to="/display" className="font-semibold text-purple-600 hover:text-purple-700 flex items-center gap-1 underline underline-offset-4">
                 <Tv className="w-3.5 h-3.5" />
@@ -99,37 +99,37 @@ export default function HomePage() {
           </div>
 
           {/* Real-time Live Metrics Strip */}
-          <div className="mt-16 max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm">
-            <div className="text-center p-3 border-r border-slate-100 last:border-r-0">
-              <div className="flex items-center justify-center gap-1 text-slate-400 text-xs font-semibold mb-1">
-                <Ticket className="w-3.5 h-3.5 text-purple-500" />
-                <span>Tokens Today</span>
+          <div className="mt-12 sm:mt-16 max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-white border border-slate-200/90 shadow-sm">
+            <div className="text-center p-2.5 sm:p-3 border-r border-b sm:border-b-0 border-slate-100">
+              <div className="flex items-center justify-center gap-1 text-slate-400 text-[11px] sm:text-xs font-semibold mb-1">
+                <Ticket className="w-3.5 h-3.5 text-purple-500 shrink-0" />
+                <span className="truncate">Tokens Today</span>
               </div>
-              <p className="text-2xl font-extrabold text-slate-900 font-mono-num">{totalToday}</p>
+              <p className="text-xl sm:text-2xl font-extrabold text-slate-900 font-mono-num">{totalToday}</p>
             </div>
 
-            <div className="text-center p-3 border-r border-slate-100 last:border-r-0">
-              <div className="flex items-center justify-center gap-1 text-slate-400 text-xs font-semibold mb-1">
-                <Users className="w-3.5 h-3.5 text-amber-500" />
-                <span>In Queue</span>
+            <div className="text-center p-2.5 sm:p-3 border-b sm:border-b-0 sm:border-r border-slate-100">
+              <div className="flex items-center justify-center gap-1 text-slate-400 text-[11px] sm:text-xs font-semibold mb-1">
+                <Users className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span className="truncate">In Queue</span>
               </div>
-              <p className="text-2xl font-extrabold text-amber-600 font-mono-num">{waitingCount}</p>
+              <p className="text-xl sm:text-2xl font-extrabold text-amber-600 font-mono-num">{waitingCount}</p>
             </div>
 
-            <div className="text-center p-3 border-r border-slate-100 last:border-r-0">
-              <div className="flex items-center justify-center gap-1 text-slate-400 text-xs font-semibold mb-1">
-                <Zap className="w-3.5 h-3.5 text-emerald-500" />
-                <span>Serving Now</span>
+            <div className="text-center p-2.5 sm:p-3 border-r border-slate-100">
+              <div className="flex items-center justify-center gap-1 text-slate-400 text-[11px] sm:text-xs font-semibold mb-1">
+                <Zap className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                <span className="truncate">Serving Now</span>
               </div>
-              <p className="text-2xl font-extrabold text-emerald-600 font-mono-num">{servingCount}</p>
+              <p className="text-xl sm:text-2xl font-extrabold text-emerald-600 font-mono-num">{servingCount}</p>
             </div>
 
-            <div className="text-center p-3">
-              <div className="flex items-center justify-center gap-1 text-slate-400 text-xs font-semibold mb-1">
-                <Clock className="w-3.5 h-3.5 text-indigo-500" />
-                <span>Avg Wait</span>
+            <div className="text-center p-2.5 sm:p-3">
+              <div className="flex items-center justify-center gap-1 text-slate-400 text-[11px] sm:text-xs font-semibold mb-1">
+                <Clock className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                <span className="truncate">Avg Wait</span>
               </div>
-              <p className="text-2xl font-extrabold text-indigo-600 font-mono-num">~{avgWaitMinutes}m</p>
+              <p className="text-xl sm:text-2xl font-extrabold text-indigo-600 font-mono-num">~{avgWaitMinutes}m</p>
             </div>
           </div>
 

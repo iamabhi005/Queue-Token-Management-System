@@ -14,7 +14,7 @@ const getTokens = async (req, res, next) => {
 
     const query = {};
 
-    if (status) {
+    if (status && ['WAITING', 'SERVING', 'COMPLETED', 'SKIPPED'].includes(status.toUpperCase())) {
       query.status = status.toUpperCase();
     }
     if (serviceId) {
@@ -24,20 +24,26 @@ const getTokens = async (req, res, next) => {
       query.counterId = counterId;
     }
     if (date) {
-      const startOfDay = new Date(date);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(date);
-      endOfDay.setHours(23, 59, 59, 999);
-      query.createdAt = { $gte: startOfDay, $lte: endOfDay };
+      const parsedDate = new Date(date);
+      if (!isNaN(parsedDate.getTime())) {
+        const startOfDay = new Date(parsedDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(parsedDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        query.createdAt = { $gte: startOfDay, $lte: endOfDay };
+      }
     }
-    if (search) {
+    if (search && typeof search === 'string') {
+      const sanitizedSearch = search.trim().slice(0, 50).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       query.$or = [
-        { tokenNumber: { $regex: search, $options: 'i' } },
-        { customerName: { $regex: search, $options: 'i' } }
+        { tokenNumber: { $regex: sanitizedSearch, $options: 'i' } },
+        { customerName: { $regex: sanitizedSearch, $options: 'i' } }
       ];
     }
 
-    const skip = (parseInt(page, 10) - 1) * parseInt(limit, 10);
+    const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100);
+    const safePage = Math.max(parseInt(page, 10) || 1, 1);
+    const skip = (safePage - 1) * safeLimit;
     const total = await Token.countDocuments(query);
 
     const tokens = await Token.find(query)
@@ -45,14 +51,14 @@ const getTokens = async (req, res, next) => {
       .populate('counterId', 'name')
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(parseInt(limit, 10));
+      .limit(safeLimit);
 
     res.status(200).json({
       success: true,
       total,
-      page: parseInt(page, 10),
-      totalPages: Math.ceil(total / parseInt(limit, 10)) || 1,
-      limit: parseInt(limit, 10),
+      page: safePage,
+      totalPages: Math.ceil(total / safeLimit) || 1,
+      limit: safeLimit,
       data: tokens
     });
   } catch (error) {
@@ -198,33 +204,36 @@ const completeToken = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const token = await Token.findById(id);
-    if (!token) {
-      return next(new AppError(`Token with ID "${id}" was not found.`, 404));
-    }
-
-    if (token.status === 'COMPLETED') {
-      return next(new AppError('Token is already marked as completed.', 400));
-    }
-
-    token.status = 'COMPLETED';
-    token.completedAt = new Date();
-    await token.save();
-
-    const populated = await Token.findById(token._id)
+    // Atomically transition from SERVING to COMPLETED to prevent race conditions
+    const token = await Token.findOneAndUpdate(
+      { _id: id, status: 'SERVING' },
+      { status: 'COMPLETED', completedAt: new Date() },
+      { new: true }
+    )
       .populate('serviceId', 'name')
       .populate('counterId', 'name');
 
+    if (!token) {
+      const existing = await Token.findById(id);
+      if (!existing) {
+        return next(new AppError(`Token with ID "${id}" was not found.`, 404));
+      }
+      if (existing.status === 'COMPLETED') {
+        return next(new AppError('Token is already marked as completed.', 400));
+      }
+      return next(new AppError(`Cannot complete token in "${existing.status}" status. Only SERVING tokens can be completed.`, 400));
+    }
+
     // Broadcast completion to update waiting queue statistics
     emitQueueUpdate('TOKEN_COMPLETED', {
-      token: populated,
+      token,
       timestamp: new Date()
     });
 
     res.status(200).json({
       success: true,
       message: `Token ${token.tokenNumber} marked as completed.`,
-      data: populated
+      data: token
     });
   } catch (error) {
     next(error);
@@ -239,33 +248,36 @@ const skipToken = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const token = await Token.findById(id);
-    if (!token) {
-      return next(new AppError(`Token with ID "${id}" was not found.`, 404));
-    }
-
-    if (token.status === 'SKIPPED') {
-      return next(new AppError('Token is already marked as skipped.', 400));
-    }
-
-    token.status = 'SKIPPED';
-    token.completedAt = new Date();
-    await token.save();
-
-    const populated = await Token.findById(token._id)
+    // Atomically transition from WAITING or SERVING to SKIPPED
+    const token = await Token.findOneAndUpdate(
+      { _id: id, status: { $in: ['WAITING', 'SERVING'] } },
+      { status: 'SKIPPED', completedAt: new Date() },
+      { new: true }
+    )
       .populate('serviceId', 'name')
       .populate('counterId', 'name');
 
+    if (!token) {
+      const existing = await Token.findById(id);
+      if (!existing) {
+        return next(new AppError(`Token with ID "${id}" was not found.`, 404));
+      }
+      if (existing.status === 'SKIPPED') {
+        return next(new AppError('Token is already marked as skipped.', 400));
+      }
+      return next(new AppError(`Cannot skip token in "${existing.status}" status.`, 400));
+    }
+
     // Broadcast skip event to refresh display screen
     emitQueueUpdate('TOKEN_SKIPPED', {
-      token: populated,
+      token,
       timestamp: new Date()
     });
 
     res.status(200).json({
       success: true,
       message: `Token ${token.tokenNumber} marked as skipped.`,
-      data: populated
+      data: token
     });
   } catch (error) {
     next(error);

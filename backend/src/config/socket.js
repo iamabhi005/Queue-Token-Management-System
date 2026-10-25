@@ -12,7 +12,10 @@ function initSocket(httpServer) {
         if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) || origin === process.env.CLIENT_URL) {
           return callback(null, true);
         }
-        return callback(null, true);
+        if (/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(origin)) {
+          return callback(null, true);
+        }
+        return callback(new Error(`Socket.IO origin '${origin}' blocked by security policy.`));
       },
       methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
       credentials: true
