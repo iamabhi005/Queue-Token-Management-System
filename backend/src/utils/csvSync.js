@@ -11,7 +11,11 @@ const ActivityLog = require('../models/ActivityLog');
 
 const exportDir = path.resolve(__dirname, '../../../exports');
 
+// In production (Railway/Render), filesystem is ephemeral — skip CSV writes
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
 function ensureExportDir() {
+  if (IS_PRODUCTION) return; // No filesystem writes in production
   if (!fs.existsSync(exportDir)) {
     fs.mkdirSync(exportDir, { recursive: true });
   }
@@ -31,6 +35,7 @@ function escapeCell(val) {
  * Append or update a user in users_dataset.csv
  */
 function recordUserInCsv(user) {
+  if (IS_PRODUCTION) return;
   try {
     ensureExportDir();
     const filePath = path.join(exportDir, 'users_dataset.csv');
@@ -77,6 +82,7 @@ function recordUserInCsv(user) {
  * Append or update a token in tokens_dataset.csv
  */
 function recordTokenInCsv(token, serviceName = '', counterName = '') {
+  if (IS_PRODUCTION) return;
   try {
     ensureExportDir();
     const filePath = path.join(exportDir, 'tokens_dataset.csv');
@@ -137,6 +143,7 @@ function recordTokenInCsv(token, serviceName = '', counterName = '') {
  * Append or update a service in services_dataset.csv
  */
 function recordServiceInCsv(service) {
+  if (IS_PRODUCTION) return;
   try {
     ensureExportDir();
     const filePath = path.join(exportDir, 'services_dataset.csv');
@@ -184,6 +191,7 @@ function recordServiceInCsv(service) {
  * Append or update a counter in counters_dataset.csv
  */
 function recordCounterInCsv(counter, serviceName = '') {
+  if (IS_PRODUCTION) return;
   try {
     ensureExportDir();
     const filePath = path.join(exportDir, 'counters_dataset.csv');
@@ -230,6 +238,7 @@ function recordCounterInCsv(counter, serviceName = '') {
  * Append an activity log into activity_logs_dataset.csv
  */
 function recordActivityLogInCsv(log) {
+  if (IS_PRODUCTION) return;
   try {
     ensureExportDir();
     const filePath = path.join(exportDir, 'activity_logs_dataset.csv');
@@ -380,6 +389,7 @@ async function syncActivityLogsCsv() {
 }
 
 async function syncAllCsvs() {
+  if (IS_PRODUCTION) return; // Skip CSV sync in production
   await Promise.all([
     syncUsersCsv(),
     syncTokensCsv(),

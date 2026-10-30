@@ -20,12 +20,17 @@ app.use(helmet({
   crossOriginResourcePolicy: false,
 }));
 
-// Allowed origin validator (Local dev ports, configured CLIENT_URL, Cloudflare tunnels)
+// Allowed origin validator (Local dev ports, configured CLIENT_URL, Cloudflare tunnels, Vercel)
 const isAllowedOrigin = (origin) => {
   if (!origin) return true; // Server-to-server, curl, testing tools
   if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
   if (process.env.CLIENT_URL && origin === process.env.CLIENT_URL) return true;
   if (/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(origin)) return true;
+  // Allow all Vercel preview and production deployments
+  if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin)) return true;
+  // Allow Railway and Render previews (in case of cross-service calls)
+  if (/^https:\/\/[a-z0-9-]+\.up\.railway\.app$/.test(origin)) return true;
+  if (/^https:\/\/[a-z0-9-]+\.onrender\.com$/.test(origin)) return true;
   return false;
 };
 

@@ -9,12 +9,13 @@ function initSocket(httpServer) {
     cors: {
       origin: (origin, callback) => {
         if (!origin) return callback(null, true);
-        if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) || origin === process.env.CLIENT_URL) {
-          return callback(null, true);
-        }
-        if (/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(origin)) {
-          return callback(null, true);
-        }
+        if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return callback(null, true);
+        if (process.env.CLIENT_URL && origin === process.env.CLIENT_URL) return callback(null, true);
+        if (/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(origin)) return callback(null, true);
+        // Allow Vercel, Railway, Render deployments
+        if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin)) return callback(null, true);
+        if (/^https:\/\/[a-z0-9-]+\.up\.railway\.app$/.test(origin)) return callback(null, true);
+        if (/^https:\/\/[a-z0-9-]+\.onrender\.com$/.test(origin)) return callback(null, true);
         return callback(new Error(`Socket.IO origin '${origin}' blocked by security policy.`));
       },
       methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
