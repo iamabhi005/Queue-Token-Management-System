@@ -160,6 +160,14 @@ const callNextToken = async (req, res, next) => {
       }
     }
 
+    // Automatically complete any prior token being served at this counter so counter never gets stuck
+    if (counterDoc) {
+      await Token.updateMany(
+        { counterId: counterDoc._id, status: 'SERVING' },
+        { status: 'COMPLETED', completedAt: new Date() }
+      );
+    }
+
     // 1. Try to find the next WAITING token for this counter's assigned service (FIFO order)
     let nextToken = null;
     if (targetServiceId) {
@@ -237,8 +245,7 @@ const completeToken = async (req, res, next) => {
       { _id: id, status: { $in: ['SERVING', 'WAITING'] } },
       { 
         status: 'COMPLETED', 
-        completedAt: new Date(),
-        $setOnInsert: { calledAt: new Date() }
+        completedAt: new Date()
       },
       { new: true }
     )
@@ -260,6 +267,15 @@ const completeToken = async (req, res, next) => {
     if (!token.calledAt) {
       token.calledAt = token.createdAt || new Date();
       await token.save().catch(() => {});
+    }
+
+    // If this token had a counter, ensure no lingering SERVING tokens remain on this counter
+    if (token.counterId) {
+      const cId = token.counterId._id || token.counterId;
+      await Token.updateMany(
+        { counterId: cId, status: 'SERVING', _id: { $ne: token._id } },
+        { status: 'COMPLETED', completedAt: new Date() }
+      );
     }
 
     // Broadcast completion to update waiting queue statistics

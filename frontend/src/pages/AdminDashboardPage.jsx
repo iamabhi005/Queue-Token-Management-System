@@ -137,28 +137,34 @@ export default function AdminDashboardPage() {
   };
 
   const handleComplete = async (tokenId) => {
-    const targetId = tokenId || currentCounterServingToken?.id || currentCounterServingToken?._id;
+    const targetId = tokenId || 
+      currentCounterServingToken?.id || currentCounterServingToken?._id ||
+      displayWaitingTokens[0]?.id || displayWaitingTokens[0]?._id;
+
     if (!targetId) {
-      showFeedback('No active token currently being served to complete.', 'warning');
+      showFeedback('No waiting or serving tokens available to complete.', 'warning');
       return;
     }
     const res = await completeToken(targetId);
     if (res.success) {
-      showFeedback('Token marked as Completed.', 'success');
+      showFeedback(`Token ${res.data?.tokenNumber || ''} marked as Completed.`, 'success');
     } else {
       showFeedback(res.message || 'Failed to complete token.', 'warning');
     }
   };
 
   const handleSkip = async (tokenId) => {
-    const targetId = tokenId || currentCounterServingToken?.id || currentCounterServingToken?._id;
+    const targetId = tokenId || 
+      currentCounterServingToken?.id || currentCounterServingToken?._id ||
+      displayWaitingTokens[0]?.id || displayWaitingTokens[0]?._id;
+
     if (!targetId) {
-      showFeedback('No active token currently being served to skip.', 'warning');
+      showFeedback('No waiting or serving tokens available to skip.', 'warning');
       return;
     }
     const res = await skipToken(targetId);
     if (res.success) {
-      showFeedback('Token marked as Skipped (No-Show).', 'info');
+      showFeedback(`Token ${res.data?.tokenNumber || ''} marked as Skipped (No-Show).`, 'info');
     } else {
       showFeedback(res.message || 'Failed to skip token.', 'warning');
     }
@@ -526,20 +532,20 @@ export default function AdminDashboardPage() {
 
                     <button
                       onClick={() => handleComplete()}
-                      disabled={!currentCounterServingToken}
+                      disabled={!currentCounterServingToken && displayWaitingTokens.length === 0}
                       className="py-3.5 px-4 rounded-xl text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       <UserCheck className="w-4 h-4" />
-                      <span>Complete</span>
+                      <span>{currentCounterServingToken ? 'Complete' : 'Complete Next'}</span>
                     </button>
 
                     <button
                       onClick={() => handleSkip()}
-                      disabled={!currentCounterServingToken}
+                      disabled={!currentCounterServingToken && displayWaitingTokens.length === 0}
                       className="py-3.5 px-4 rounded-xl text-sm font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       <UserX className="w-4 h-4" />
-                      <span>Skip (No-Show)</span>
+                      <span>{currentCounterServingToken ? 'Skip (No-Show)' : 'Skip Next'}</span>
                     </button>
                   </div>
                 </div>
@@ -566,24 +572,39 @@ export default function AdminDashboardPage() {
                         displayWaitingTokens.map((t, idx) => (
                           <div
                             key={t.id || t._id}
-                            className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between hover:bg-slate-100/70 transition-colors"
+                            className="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between hover:bg-slate-100/70 transition-colors gap-2"
                           >
-                            <div className="flex items-center gap-3">
-                              <span className="w-6 h-6 rounded-lg bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center font-mono-num">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <span className="w-6 h-6 rounded-lg bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center font-mono-num shrink-0">
                                 {idx + 1}
                               </span>
-                              <div>
-                                <span className="text-sm font-extrabold text-slate-900 font-mono-num">
+                              <div className="min-w-0">
+                                <span className="text-sm font-extrabold text-slate-900 font-mono-num block">
                                   {t.tokenNumber}
                                 </span>
-                                <p className="text-[11px] text-slate-500 truncate max-w-[140px] sm:max-w-[180px]">
+                                <p className="text-[11px] text-slate-500 truncate max-w-[120px] sm:max-w-[150px]">
                                   {t.customerName}
                                 </p>
                               </div>
                             </div>
-                            <span className="text-[11px] font-medium text-slate-400 block font-mono-num">
-                              Waiting {t.waitMinutes || 5}m
-                            </span>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <button
+                                onClick={() => handleComplete(t.id || t._id)}
+                                title="Complete this ticket"
+                                className="px-2 py-1 rounded-lg bg-emerald-100 text-emerald-800 hover:bg-emerald-200 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                              >
+                                <UserCheck className="w-3 h-3" />
+                                <span>Done</span>
+                              </button>
+                              <button
+                                onClick={() => handleSkip(t.id || t._id)}
+                                title="Skip ticket"
+                                className="px-2 py-1 rounded-lg bg-rose-100 text-rose-800 hover:bg-rose-200 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                              >
+                                <UserX className="w-3 h-3" />
+                                <span>Skip</span>
+                              </button>
+                            </div>
                           </div>
                         ))
                       )}
@@ -761,12 +782,26 @@ export default function AdminDashboardPage() {
                             </td>
                             <td className="px-6 py-4 text-right">
                               {token.status === 'WAITING' ? (
-                                <button
-                                  onClick={handleCallNext}
-                                  className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 transition-colors cursor-pointer"
-                                >
-                                  Call
-                                </button>
+                                <div className="inline-flex gap-1">
+                                  <button
+                                    onClick={handleCallNext}
+                                    className="px-2 py-1 text-xs font-semibold rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 transition-colors cursor-pointer"
+                                  >
+                                    Call
+                                  </button>
+                                  <button
+                                    onClick={() => handleComplete(token.id || token._id)}
+                                    className="px-2 py-1 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer"
+                                  >
+                                    Done
+                                  </button>
+                                  <button
+                                    onClick={() => handleSkip(token.id || token._id)}
+                                    className="px-2 py-1 text-xs font-semibold rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer"
+                                  >
+                                    Skip
+                                  </button>
+                                </div>
                               ) : token.status === 'SERVING' ? (
                                 <div className="inline-flex gap-1">
                                   <button
@@ -879,20 +914,20 @@ export default function AdminDashboardPage() {
 
                   <button
                     onClick={() => handleComplete()}
-                    disabled={!currentCounterServingToken}
+                    disabled={!currentCounterServingToken && displayWaitingTokens.length === 0}
                     className="py-4 px-4 rounded-2xl text-sm font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <UserCheck className="w-4 h-4" />
-                    <span>Complete</span>
+                    <span>{currentCounterServingToken ? 'Complete' : 'Complete Next'}</span>
                   </button>
 
                   <button
                     onClick={() => handleSkip()}
-                    disabled={!currentCounterServingToken}
+                    disabled={!currentCounterServingToken && displayWaitingTokens.length === 0}
                     className="py-4 px-4 rounded-2xl text-sm font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <UserX className="w-4 h-4" />
-                    <span>Skip No-Show</span>
+                    <span>{currentCounterServingToken ? 'Skip No-Show' : 'Skip Next'}</span>
                   </button>
                 </div>
               </div>
@@ -915,22 +950,37 @@ export default function AdminDashboardPage() {
                       displayWaitingTokens.map((t, idx) => (
                         <div
                           key={t.id || t._id}
-                          className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between"
+                          className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2"
                         >
-                          <div className="flex items-center gap-3">
-                            <span className="w-6 h-6 rounded-lg bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center font-mono-num">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className="w-6 h-6 rounded-lg bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center font-mono-num shrink-0">
                               {idx + 1}
                             </span>
-                            <div>
-                              <span className="text-sm font-extrabold text-slate-900 font-mono-num">
+                            <div className="min-w-0">
+                              <span className="text-sm font-extrabold text-slate-900 font-mono-num block">
                                 {t.tokenNumber}
                               </span>
-                              <p className="text-xs text-slate-500">{t.customerName}</p>
+                              <p className="text-xs text-slate-500 truncate max-w-[120px] sm:max-w-[150px]">{t.customerName}</p>
                             </div>
                           </div>
-                          <span className="text-xs text-slate-400 font-mono-num">
-                            Wait: {t.waitMinutes || 5}m
-                          </span>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button
+                              onClick={() => handleComplete(t.id || t._id)}
+                              title="Complete ticket"
+                              className="px-2 py-1 rounded-lg bg-emerald-100 text-emerald-800 hover:bg-emerald-200 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                            >
+                              <UserCheck className="w-3 h-3" />
+                              <span>Done</span>
+                            </button>
+                            <button
+                              onClick={() => handleSkip(t.id || t._id)}
+                              title="Skip ticket"
+                              className="px-2 py-1 rounded-lg bg-rose-100 text-rose-800 hover:bg-rose-200 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                            >
+                              <UserX className="w-3 h-3" />
+                              <span>Skip</span>
+                            </button>
+                          </div>
                         </div>
                       ))
                     )}

@@ -12,7 +12,12 @@ router.get('/today', async (req, res, next) => {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
-    const tokens = await Token.find({ createdAt: { $gte: todayStart } })
+    const tokens = await Token.find({
+      $or: [
+        { createdAt: { $gte: todayStart } },
+        { status: { $in: ['WAITING', 'SERVING'] } }
+      ]
+    })
       .populate('serviceId', 'name averageServiceTime')
       .populate('counterId', 'name')
       .sort({ createdAt: -1 })

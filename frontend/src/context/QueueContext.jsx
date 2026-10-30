@@ -222,16 +222,29 @@ export function QueueProvider({ children }) {
 
       if (!token) return;
 
-      setTokens(prev => prev.map(t => {
-        if ((t.id || t._id) === (token.id || token._id)) {
-          return { ...t, ...token, status: 'SERVING', counterNumber: counterName };
+      const targetId = String(token.id || token._id);
+
+      setTokens(prev => {
+        const exists = prev.some(t => String(t.id || t._id) === targetId);
+        if (exists) {
+          return prev.map(t => {
+            if (String(t.id || t._id) === targetId) {
+              return { ...t, ...token, status: 'SERVING', counterNumber: counterName };
+            }
+            // Mark any previous token at this counter as COMPLETED
+            const tCounterId = String(t.counterId?.id || t.counterId?._id || t.counterId || '');
+            if (counterId && tCounterId === String(counterId) && t.status === 'SERVING') {
+              return { ...t, status: 'COMPLETED' };
+            }
+            return t;
+          });
         }
-        return t;
-      }));
+        return [{ ...token, status: 'SERVING', counterNumber: counterName }, ...prev];
+      });
 
       if (counterId) {
         setCounters(prev => prev.map(c => {
-          if (c.id === counterId || c._id === counterId) {
+          if (String(c.id || c._id) === String(counterId)) {
             return { ...c, currentToken: token.tokenNumber, status: 'OPEN' };
           }
           return c;
@@ -247,8 +260,10 @@ export function QueueProvider({ children }) {
       const token = payload?.token || payload;
       if (!token) return;
 
+      const targetId = String(token.id || token._id);
+
       setTokens(prev => prev.map(t => {
-        if ((t.id || t._id) === (token.id || token._id)) {
+        if (String(t.id || t._id) === targetId) {
           return { ...t, ...token, status: 'COMPLETED' };
         }
         return t;
@@ -257,7 +272,7 @@ export function QueueProvider({ children }) {
       const counterId = token.counterId?.id || token.counterId?._id || token.counterId;
       if (counterId) {
         setCounters(prev => prev.map(c => {
-          if (c.id === counterId || c._id === counterId) {
+          if (String(c.id || c._id) === String(counterId)) {
             return { ...c, currentToken: null };
           }
           return c;
@@ -270,8 +285,10 @@ export function QueueProvider({ children }) {
       const token = payload?.token || payload;
       if (!token) return;
 
+      const targetId = String(token.id || token._id);
+
       setTokens(prev => prev.map(t => {
-        if ((t.id || t._id) === (token.id || token._id)) {
+        if (String(t.id || t._id) === targetId) {
           return { ...t, ...token, status: 'SKIPPED' };
         }
         return t;
@@ -280,7 +297,7 @@ export function QueueProvider({ children }) {
       const counterId = token.counterId?.id || token.counterId?._id || token.counterId;
       if (counterId) {
         setCounters(prev => prev.map(c => {
-          if (c.id === counterId || c._id === counterId) {
+          if (String(c.id || c._id) === String(counterId)) {
             return { ...c, currentToken: null };
           }
           return c;
