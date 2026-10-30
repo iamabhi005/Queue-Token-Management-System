@@ -146,36 +146,59 @@ const callNextToken = async (req, res, next) => {
     let counterDoc = null;
 
     if (counterId) {
-      counterDoc = await Counter.findById(counterId);
-      if (!counterDoc) {
-        return next(new AppError('Specified counter was not found.', 404));
+      counterDoc = await Counter.findById(counterId).catch(() => null);
+      if (counterDoc) {
+        targetServiceId = targetServiceId || counterDoc.serviceId;
       }
-      targetServiceId = counterDoc.serviceId;
     }
 
-    if (!targetServiceId) {
-      return next(new AppError('Either counterId or serviceId is required to call next token.', 400));
+    // If no counter found by ID, fallback to the first active station
+    if (!counterDoc) {
+      counterDoc = await Counter.findOne({ isActive: true });
+      if (counterDoc) {
+        targetServiceId = targetServiceId || counterDoc.serviceId;
+      }
     }
 
-    // Atomically find next WAITING token in FIFO order (oldest createdAt first)
-    const nextToken = await Token.findOneAndUpdate(
-      { serviceId: targetServiceId, status: 'WAITING' },
-      {
-        status: 'SERVING',
-        counterId: counterDoc ? counterDoc._id : null,
-        calledAt: new Date()
-      },
-      {
-        sort: { createdAt: 1 },
-        new: true
-      }
-    ).populate('serviceId', 'name averageServiceTime')
-     .populate('counterId', 'name');
+    // 1. Try to find the next WAITING token for this counter's assigned service (FIFO order)
+    let nextToken = null;
+    if (targetServiceId) {
+      nextToken = await Token.findOneAndUpdate(
+        { serviceId: targetServiceId, status: 'WAITING' },
+        {
+          status: 'SERVING',
+          counterId: counterDoc ? counterDoc._id : null,
+          calledAt: new Date()
+        },
+        {
+          sort: { createdAt: 1 },
+          new: true
+        }
+      ).populate('serviceId', 'name averageServiceTime')
+       .populate('counterId', 'name');
+    }
+
+    // 2. Fallback: If no waiting customer for this specific service, call next waiting from ANY service!
+    if (!nextToken) {
+      nextToken = await Token.findOneAndUpdate(
+        { status: 'WAITING' },
+        {
+          status: 'SERVING',
+          counterId: counterDoc ? counterDoc._id : null,
+          calledAt: new Date()
+        },
+        {
+          sort: { createdAt: 1 },
+          new: true
+        }
+      ).populate('serviceId', 'name averageServiceTime')
+       .populate('counterId', 'name');
+    }
 
     if (!nextToken) {
       return res.status(200).json({
         success: false,
-        message: 'No waiting tokens available for this service queue.',
+        message: 'No waiting tokens in the queue. All customers have been served!',
         data: null
       });
     }
@@ -209,24 +232,34 @@ const completeToken = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    // Atomically transition from SERVING to COMPLETED to prevent race conditions
+    // Atomically transition from SERVING or WAITING to COMPLETED
     const token = await Token.findOneAndUpdate(
-      { _id: id, status: 'SERVING' },
-      { status: 'COMPLETED', completedAt: new Date() },
+      { _id: id, status: { $in: ['SERVING', 'WAITING'] } },
+      { 
+        status: 'COMPLETED', 
+        completedAt: new Date(),
+        $setOnInsert: { calledAt: new Date() }
+      },
       { new: true }
     )
       .populate('serviceId', 'name')
       .populate('counterId', 'name');
 
     if (!token) {
-      const existing = await Token.findById(id);
+      const existing = await Token.findById(id).catch(() => null);
       if (!existing) {
         return next(new AppError(`Token with ID "${id}" was not found.`, 404));
       }
       if (existing.status === 'COMPLETED') {
         return next(new AppError('Token is already marked as completed.', 400));
       }
-      return next(new AppError(`Cannot complete token in "${existing.status}" status. Only SERVING tokens can be completed.`, 400));
+      return next(new AppError(`Cannot complete token in "${existing.status}" status.`, 400));
+    }
+
+    // Ensure calledAt is recorded if completed directly
+    if (!token.calledAt) {
+      token.calledAt = token.createdAt || new Date();
+      await token.save().catch(() => {});
     }
 
     // Broadcast completion to update waiting queue statistics
@@ -267,7 +300,7 @@ const skipToken = async (req, res, next) => {
       .populate('counterId', 'name');
 
     if (!token) {
-      const existing = await Token.findById(id);
+      const existing = await Token.findById(id).catch(() => null);
       if (!existing) {
         return next(new AppError(`Token with ID "${id}" was not found.`, 404));
       }

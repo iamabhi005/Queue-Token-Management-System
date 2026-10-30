@@ -31,7 +31,8 @@ export function QueueProvider({ children }) {
       if (ctrList.length > 0) {
         setCounters(ctrList);
         // Initialize activeCounterId to first real counter if not yet set
-        setActiveCounterId(prev => prev && prev !== 'cnt-1' ? prev : ctrList[0]?.id || prev);
+        const firstValidId = ctrList[0]?.id || ctrList[0]?._id;
+        setActiveCounterId(prev => (prev && prev !== 'cnt-1' && ctrList.some(c => (c.id || c._id) === prev)) ? prev : firstValidId);
       }
       if (tknList.length > 0 || tokensRes.success) setTokens(tknList);
     } catch (err) {
@@ -126,17 +127,29 @@ export function QueueProvider({ children }) {
   // Call Next Token via backend
   const callNext = async (counterId = activeCounterId) => {
     try {
-      const response = await adminAPI.callNextToken(counterId, null);
+      const targetCounterId = counterId || activeCounterId || counters[0]?.id || counters[0]?._id;
+      const response = await adminAPI.callNextToken(targetCounterId, null);
       if (!response.success || !response.data) {
-        return { success: false, message: response.message || 'No waiting tokens for this counter.' };
+        return { success: false, message: response.message || 'No waiting tokens in the queue.' };
       }
       const token = response.data;
-      const counter = counters.find(c => c.id === counterId) || { id: counterId, name: 'Counter' };
-      const counterName = counter.name || 'Counter';
+      const counter = counters.find(c => String(c.id || c._id) === String(targetCounterId)) || { id: targetCounterId, name: 'Counter 1' };
+      const counterName = counter.name || token?.counterId?.name || 'Counter';
 
       // Local optimistic update
-      setTokens(prev => prev.map(t => ((t.id || t._id) === (token.id || token._id) ? token : t)));
-      setCounters(prev => prev.map(c => (c.id === counterId ? { ...c, currentToken: token.tokenNumber, status: 'OPEN' } : c)));
+      setTokens(prev => {
+        const tokenId = String(token.id || token._id);
+        const exists = prev.some(t => String(t.id || t._id) === tokenId);
+        if (exists) {
+          return prev.map(t => (String(t.id || t._id) === tokenId ? { ...t, ...token, status: 'SERVING', counterNumber: counterName } : t));
+        }
+        return [{ ...token, status: 'SERVING', counterNumber: counterName }, ...prev];
+      });
+
+      if (targetCounterId) {
+        setCounters(prev => prev.map(c => (String(c.id || c._id) === String(targetCounterId) ? { ...c, currentToken: token.tokenNumber, status: 'OPEN' } : c)));
+      }
+
       setLastAnnouncedToken({ tokenNumber: token.tokenNumber, counterNumber: counterName });
       announceToken(token.tokenNumber, counterName);
       return { success: true, token, counter };
@@ -151,8 +164,13 @@ export function QueueProvider({ children }) {
     try {
       const response = await adminAPI.completeToken(tokenId);
       const updatedToken = response.data || { id: tokenId, status: 'COMPLETED' };
-      setTokens(prev => prev.map(t => ((t.id || t._id) === (tokenId || updatedToken.id) ? { ...t, status: 'COMPLETED', ...updatedToken } : t)));
-      return { success: true };
+      const targetId = String(tokenId || updatedToken.id || updatedToken._id);
+      setTokens(prev => prev.map(t => (String(t.id || t._id) === targetId ? { ...t, status: 'COMPLETED', ...updatedToken } : t)));
+      const cId = updatedToken.counterId?.id || updatedToken.counterId?._id || updatedToken.counterId || activeCounterId;
+      if (cId) {
+        setCounters(prev => prev.map(c => (String(c.id || c._id) === String(cId) ? { ...c, currentToken: null } : c)));
+      }
+      return { success: true, data: updatedToken };
     } catch (err) {
       console.error('Complete token error:', err);
       return { success: false, message: err.message || 'Failed to complete token.' };
@@ -164,8 +182,13 @@ export function QueueProvider({ children }) {
     try {
       const response = await adminAPI.skipToken(tokenId);
       const updatedToken = response.data || { id: tokenId, status: 'SKIPPED' };
-      setTokens(prev => prev.map(t => ((t.id || t._id) === (tokenId || updatedToken.id) ? { ...t, status: 'SKIPPED', ...updatedToken } : t)));
-      return { success: true };
+      const targetId = String(tokenId || updatedToken.id || updatedToken._id);
+      setTokens(prev => prev.map(t => (String(t.id || t._id) === targetId ? { ...t, status: 'SKIPPED', ...updatedToken } : t)));
+      const cId = updatedToken.counterId?.id || updatedToken.counterId?._id || updatedToken.counterId || activeCounterId;
+      if (cId) {
+        setCounters(prev => prev.map(c => (String(c.id || c._id) === String(cId) ? { ...c, currentToken: null } : c)));
+      }
+      return { success: true, data: updatedToken };
     } catch (err) {
       console.error('Skip token error:', err);
       return { success: false, message: err.message || 'Failed to skip token.' };

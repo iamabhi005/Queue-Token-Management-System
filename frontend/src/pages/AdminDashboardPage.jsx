@@ -97,10 +97,13 @@ export default function AdminDashboardPage() {
   const [customerBookingSuccess, setCustomerBookingSuccess] = useState(null);
   const [isBookingToken, setIsBookingToken] = useState(false);
 
-  // Current token being served at active station
-  const currentCounterServingToken = tokens.find(
-    t => resolveCounterId(t.counterId) === activeCounterId && t.status === 'SERVING'
-  );
+  // Current token being served at active station (with fallback to any SERVING token if unassigned or single station)
+  const currentCounterServingToken = tokens.find(t => {
+    if (t.status !== 'SERVING') return false;
+    const cId = resolveCounterId(t.counterId);
+    if (!cId || !activeCounterId) return true;
+    return String(cId) === String(activeCounterId);
+  }) || tokens.find(t => t.status === 'SERVING');
 
   // Eligible waiting tokens for this counter
   const counterWaitingTokens = tokens.filter(t => {
@@ -110,8 +113,13 @@ export default function AdminDashboardPage() {
     if (activeCounter?.supportedServiceIds && Array.isArray(activeCounter.supportedServiceIds)) {
       return activeCounter.supportedServiceIds.includes(tServiceId);
     }
-    return !activeServiceId || activeServiceId === tServiceId;
+    return !activeServiceId || String(activeServiceId) === String(tServiceId);
   });
+
+  // Display waiting tokens fallback to all waiting tokens if counter-specific queue is empty
+  const displayWaitingTokens = counterWaitingTokens.length > 0
+    ? counterWaitingTokens
+    : tokens.filter(t => t.status === 'WAITING');
 
   const showFeedback = (message, type = 'success') => {
     setActionFeedback({ message, type });
@@ -119,16 +127,22 @@ export default function AdminDashboardPage() {
   };
 
   const handleCallNext = async () => {
-    const res = await callNext(activeCounterId);
+    const targetCounter = activeCounterId || counters[0]?.id || counters[0]?._id;
+    const res = await callNext(targetCounter);
     if (res.success) {
-      showFeedback(`Called ${res.token.tokenNumber} to ${activeCounter?.name || 'Counter'}!`, 'success');
+      showFeedback(`Called ${res.token?.tokenNumber || 'Customer'} to ${activeCounter?.name || counters[0]?.name || 'Counter'}!`, 'success');
     } else {
       showFeedback(res.message, 'warning');
     }
   };
 
   const handleComplete = async (tokenId) => {
-    const res = await completeToken(tokenId);
+    const targetId = tokenId || currentCounterServingToken?.id || currentCounterServingToken?._id;
+    if (!targetId) {
+      showFeedback('No active token currently being served to complete.', 'warning');
+      return;
+    }
+    const res = await completeToken(targetId);
     if (res.success) {
       showFeedback('Token marked as Completed.', 'success');
     } else {
@@ -137,7 +151,12 @@ export default function AdminDashboardPage() {
   };
 
   const handleSkip = async (tokenId) => {
-    const res = await skipToken(tokenId);
+    const targetId = tokenId || currentCounterServingToken?.id || currentCounterServingToken?._id;
+    if (!targetId) {
+      showFeedback('No active token currently being served to skip.', 'warning');
+      return;
+    }
+    const res = await skipToken(targetId);
     if (res.success) {
       showFeedback('Token marked as Skipped (No-Show).', 'info');
     } else {
@@ -392,7 +411,7 @@ export default function AdminDashboardPage() {
                 value={waitingCount}
                 icon={Users}
                 color="amber"
-                changeText={`${counterWaitingTokens.length} at station`}
+                changeText={`${displayWaitingTokens.length} in queue`}
               />
               <StatCard
                 title="Serving Now"
@@ -506,7 +525,7 @@ export default function AdminDashboardPage() {
                     </button>
 
                     <button
-                      onClick={() => currentCounterServingToken && handleComplete(currentCounterServingToken.id || currentCounterServingToken._id)}
+                      onClick={() => handleComplete()}
                       disabled={!currentCounterServingToken}
                       className="py-3.5 px-4 rounded-xl text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                     >
@@ -515,7 +534,7 @@ export default function AdminDashboardPage() {
                     </button>
 
                     <button
-                      onClick={() => currentCounterServingToken && handleSkip(currentCounterServingToken.id || currentCounterServingToken._id)}
+                      onClick={() => handleSkip()}
                       disabled={!currentCounterServingToken}
                       className="py-3.5 px-4 rounded-xl text-sm font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                     >
@@ -530,7 +549,7 @@ export default function AdminDashboardPage() {
                   <div>
                     <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
                       <h3 className="text-sm font-bold text-slate-900">
-                        Station Queue ({counterWaitingTokens.length})
+                        Station Queue ({displayWaitingTokens.length})
                       </h3>
                       <span className="text-[11px] font-semibold text-purple-600">
                         FIFO Priority Order
@@ -538,13 +557,13 @@ export default function AdminDashboardPage() {
                     </div>
 
                     <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-                      {counterWaitingTokens.length === 0 ? (
+                      {displayWaitingTokens.length === 0 ? (
                         <div className="text-center py-10 text-slate-400">
                           <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                          <p className="text-xs font-medium">No waiting customers for this station.</p>
+                          <p className="text-xs font-medium">No waiting customers in queue.</p>
                         </div>
                       ) : (
-                        counterWaitingTokens.map((t, idx) => (
+                        displayWaitingTokens.map((t, idx) => (
                           <div
                             key={t.id || t._id}
                             className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between hover:bg-slate-100/70 transition-colors"
@@ -803,7 +822,7 @@ export default function AdminDashboardPage() {
               <div className="flex items-center gap-3">
                 <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 text-center">
                   <span className="text-[10px] uppercase font-bold text-purple-200 block">Queue Backlog</span>
-                  <span className="text-xl font-black">{counterWaitingTokens.length} waiting</span>
+                  <span className="text-xl font-black">{displayWaitingTokens.length} waiting</span>
                 </div>
                 <div className="bg-white/10 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 text-center">
                   <span className="text-[10px] uppercase font-bold text-purple-200 block">Station Status</span>
@@ -859,7 +878,7 @@ export default function AdminDashboardPage() {
                   </button>
 
                   <button
-                    onClick={() => currentCounterServingToken && handleComplete(currentCounterServingToken.id || currentCounterServingToken._id)}
+                    onClick={() => handleComplete()}
                     disabled={!currentCounterServingToken}
                     className="py-4 px-4 rounded-2xl text-sm font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                   >
@@ -868,7 +887,7 @@ export default function AdminDashboardPage() {
                   </button>
 
                   <button
-                    onClick={() => currentCounterServingToken && handleSkip(currentCounterServingToken.id || currentCounterServingToken._id)}
+                    onClick={() => handleSkip()}
                     disabled={!currentCounterServingToken}
                     className="py-4 px-4 rounded-2xl text-sm font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                   >
@@ -883,17 +902,17 @@ export default function AdminDashboardPage() {
                 <div>
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
                     <h3 className="font-bold text-slate-900">Waiting for {activeCounter?.name}</h3>
-                    <span className="text-xs font-bold text-purple-600">{counterWaitingTokens.length} tickets</span>
+                    <span className="text-xs font-bold text-purple-600">{displayWaitingTokens.length} tickets</span>
                   </div>
 
                   <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
-                    {counterWaitingTokens.length === 0 ? (
+                    {displayWaitingTokens.length === 0 ? (
                       <div className="text-center py-12 text-slate-400">
                         <Users className="w-10 h-10 mx-auto mb-2 opacity-40" />
-                        <p className="text-xs font-semibold">No waiting customers for this station.</p>
+                        <p className="text-xs font-semibold">No waiting customers in queue.</p>
                       </div>
                     ) : (
-                      counterWaitingTokens.map((t, idx) => (
+                      displayWaitingTokens.map((t, idx) => (
                         <div
                           key={t.id || t._id}
                           className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between"

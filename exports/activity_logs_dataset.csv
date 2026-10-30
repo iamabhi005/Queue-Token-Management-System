@@ -1,4 +1,6 @@
 "Log ID","Action Performed","Target Dataset","Performed By","Action Details","Logged At"
+"6ae478e1910a0630d53f51a0","TOKEN_CREATED","tokens","avhi","{""tokenId"":""6ae478e1910a0630d53f519e"",""tokenNumber"":""A&CS-003"",""customerName"":""avhi"",""service"":""Account & Card Services""}","2026-10-30T11:00:49.179Z"
+"6ae478c7910a0630d53f5198","REGISTER","users","abhishek8@gmail.com","{""userId"":""6ae478c7910a0630d53f5196"",""email"":""abhishek8@gmail.com"",""role"":""STAFF""}","2026-10-30T11:00:23.268Z"
 "6ae47603928dc591f196ad3a","REGISTER","users","abhishek88950@gmail.com","{""userId"":""6ae47603928dc591f196ad38"",""email"":""abhishek88950@gmail.com"",""role"":""ADMIN""}","2026-10-30T10:48:35.600Z"
 "6ae475d6928dc591f196ad33","REGISTER","users","abhishek889050@gmail.com","{""userId"":""6ae475d6928dc591f196ad31"",""email"":""abhishek889050@gmail.com"",""role"":""STAFF""}","2026-10-30T10:47:50.114Z"
 "6ae46db25fe9a96fbf897263","REGISTER","users","abhishek889090@gmail.com","{""userId"":""6ae46db25fe9a96fbf897261"",""email"":""abhishek889090@gmail.com"",""role"":""ADMIN""}","2026-10-30T10:13:06.947Z"

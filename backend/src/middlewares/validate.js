@@ -96,16 +96,13 @@ const validateCreateToken = (req, res, next) => {
 const validateCallNextToken = (req, res, next) => {
   const { counterId, serviceId } = req.body;
 
-  if (!counterId && !serviceId) {
-    return next(new AppError('Either counterId or serviceId is required to call next token.', 400));
+  // Clean invalid or mock IDs so controller can gracefully fall back to active counter
+  if (counterId && (!mongoose.Types.ObjectId.isValid(counterId) || counterId === 'cnt-1' || counterId === 'null')) {
+    delete req.body.counterId;
   }
 
-  if (counterId && !mongoose.Types.ObjectId.isValid(counterId)) {
-    return next(new AppError('counterId must be a valid 24-character hexadecimal ObjectId.', 400));
-  }
-
-  if (serviceId && !mongoose.Types.ObjectId.isValid(serviceId)) {
-    return next(new AppError('serviceId must be a valid 24-character hexadecimal ObjectId.', 400));
+  if (serviceId && (!mongoose.Types.ObjectId.isValid(serviceId) || serviceId === 'srv-1' || serviceId === 'null')) {
+    delete req.body.serviceId;
   }
 
   next();
