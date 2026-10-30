@@ -28,11 +28,19 @@ export default function Navbar() {
     setTimeout(() => setResetAlert(false), 2500);
   };
 
+  const dashboardName = user?.role === 'ADMIN' 
+    ? 'Admin Console' 
+    : user?.role === 'STAFF' 
+    ? 'Station Console' 
+    : user?.role === 'CUSTOMER' 
+    ? 'My Dashboard' 
+    : 'Portal';
+
   const navLinks = [
     { name: 'Home', path: '/', icon: Layers },
     { name: 'Get / Track Token', path: '/customer', icon: Ticket, badge: waitingCount > 0 ? `${waitingCount} waiting` : null },
     { name: 'Public TV Display', path: '/display', icon: Tv, highlight: true },
-    { name: 'Admin Dashboard', path: '/admin', icon: LayoutDashboard }
+    { name: dashboardName, path: '/admin', icon: LayoutDashboard }
   ];
 
   const isActive = (path) => {
@@ -96,21 +104,25 @@ export default function Navbar() {
 
           {/* Right Actions */}
           <div className="hidden lg:flex items-center gap-2 xl:gap-3">
-            {/* Reset mock data button */}
-            <button
-              onClick={handleReset}
-              title="Reset queue to default mock data"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors border border-slate-200 cursor-pointer"
-            >
-              <RotateCcw className="w-3.5 h-3.5 shrink-0" />
-              <span>{resetAlert ? 'Reset Done!' : 'Reset Demo'}</span>
-            </button>
+            {/* Reset mock data button (Admin only) */}
+            {user?.role === 'ADMIN' && (
+              <button
+                onClick={handleReset}
+                title="Reset queue to default mock data"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 transition-colors border border-slate-200 cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5 shrink-0" />
+                <span>{resetAlert ? 'Reset Done!' : 'Reset Demo'}</span>
+              </button>
+            )}
 
             {isAuthenticated ? (
               <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
                 <div className="text-right">
                   <p className="text-xs font-semibold text-slate-800 leading-tight">{user.name}</p>
-                  <p className="text-[10px] text-purple-600 font-medium">Counter Staff</p>
+                  <p className="text-[10px] text-purple-600 font-bold uppercase tracking-wider">
+                    {user?.role === 'ADMIN' ? '👑 Admin' : user?.role === 'STAFF' ? '👤 Staff' : '🎫 Customer'}
+                  </p>
                 </div>
                 <button
                   onClick={logout}
@@ -126,7 +138,7 @@ export default function Navbar() {
                 className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs xl:text-sm font-semibold bg-slate-900 text-white hover:bg-slate-800 shadow-sm transition-all hover:shadow"
               >
                 <User className="w-4 h-4 text-purple-300" />
-                <span>Admin Login</span>
+                <span>Sign In / Register</span>
               </Link>
             )}
           </div>

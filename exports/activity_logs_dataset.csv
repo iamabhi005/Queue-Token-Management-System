@@ -1,4 +1,7 @@
 "Log ID","Action Performed","Target Dataset","Performed By","Action Details","Logged At"
+"6ae47603928dc591f196ad3a","REGISTER","users","abhishek88950@gmail.com","{""userId"":""6ae47603928dc591f196ad38"",""email"":""abhishek88950@gmail.com"",""role"":""ADMIN""}","2026-10-30T10:48:35.600Z"
+"6ae475d6928dc591f196ad33","REGISTER","users","abhishek889050@gmail.com","{""userId"":""6ae475d6928dc591f196ad31"",""email"":""abhishek889050@gmail.com"",""role"":""STAFF""}","2026-10-30T10:47:50.114Z"
+"6ae46db25fe9a96fbf897263","REGISTER","users","abhishek889090@gmail.com","{""userId"":""6ae46db25fe9a96fbf897261"",""email"":""abhishek889090@gmail.com"",""role"":""ADMIN""}","2026-10-30T10:13:06.947Z"
 "6ae458582c31f5ff6a532045","LOGIN","users","admin@smartqueue.com","{""userId"":""6ad9a1589bc3463c0e97306a"",""email"":""admin@smartqueue.com"",""role"":""ADMIN""}","2026-10-30T08:42:00.192Z"
 "6ae458542c31f5ff6a532042","LOGIN","users","abhishek8800@gmail.com","{""userId"":""6ae45601d7b2fe92df8acedb"",""email"":""abhishek8800@gmail.com"",""role"":""CUSTOMER""}","2026-10-30T08:41:56.909Z"
 "6ae4584a2c31f5ff6a532030","LOGIN","users","abhishek8800@gmail.com","{""userId"":""6ae45601d7b2fe92df8acedb"",""email"":""abhishek8800@gmail.com"",""role"":""CUSTOMER""}","2026-10-30T08:41:46.908Z"

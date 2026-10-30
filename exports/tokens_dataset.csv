@@ -1,6 +1,6 @@
 "Token ID","Token Number","Customer Name","Service Category","Serving Counter","Status","Created At","Called At","Completed At"
 "6ad9a1589bc3463c0e97308a","AC-001","Priya Sharma","Account & Card Services","Counter 2","COMPLETED","2026-10-22T04:58:32.081Z","2026-10-22T05:13:32.081Z","2026-10-22T05:26:32.081Z"
-"6ad9a1589bc3463c0e973084","GB-001","Marcus Vance","General Banking & Cashier","Counter 1","COMPLETED","2026-10-30T10:09:57.604Z","",""
+"6ad9a1589bc3463c0e973084","GB-001","Marcus Vance","General Banking & Cashier","Counter 1","COMPLETED","2026-10-22T05:18:32.070Z","2026-10-22T05:33:32.070Z","2026-10-22T11:34:17.453Z"
 "6ad9a1589bc3463c0e973086","GB-002","Amina Al-Mansoor","General Banking & Cashier","Counter 1","COMPLETED","2026-10-22T05:23:32.080Z","2026-10-22T05:39:10.604Z","2026-10-22T11:34:16.837Z"
 "6ad9a1589bc3463c0e973088","GB-003","Liam O'Connor","General Banking & Cashier","Counter 1","COMPLETED","2026-10-22T05:28:32.081Z","2026-10-22T10:07:16.620Z","2026-10-22T11:34:16.198Z"
 "6ad9a1589bc3463c0e97308c","AC-002","Eleanor Sterling","Account & Card Services","Counter 2","SERVING","2026-10-22T05:30:32.082Z","2026-10-22T11:15:29.958Z",""
