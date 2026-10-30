@@ -3,6 +3,7 @@ const http = require('http');
 const app = require('./app');
 const connectDB = require('./config/db');
 const { initSocket } = require('./config/socket');
+const { syncAllCsvs } = require('./utils/csvSync');
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {
@@ -23,6 +24,9 @@ connectDB().then(() => {
 
   // Initialize Socket.IO on the server
   initSocket(server);
+
+  // Synchronize MongoDB datasets with CSV export files
+  syncAllCsvs().catch(err => console.warn('[CSV Startup Sync Warning]:', err.message));
 
   const PORT = process.env.PORT || 5001;
   server.listen(PORT, "0.0.0.0", () => {

@@ -3,6 +3,7 @@ const Counter = require('../models/Counter');
 const Service = require('../models/Service');
 const AppError = require('../utils/AppError');
 const { emitQueueUpdate } = require('../config/socket');
+const { recordTokenInCsv, syncTokensCsv } = require('../utils/csvSync');
 
 /**
  * GET /api/admin/tokens
@@ -186,6 +187,10 @@ const callNextToken = async (req, res, next) => {
       timestamp: new Date()
     });
 
+    // Synchronize CSV dataset immediately
+    recordTokenInCsv(nextToken, nextToken.serviceId?.name, counterDoc?.name);
+    syncTokensCsv();
+
     res.status(200).json({
       success: true,
       message: `Token ${nextToken.tokenNumber} called to ${counterDoc ? counterDoc.name : 'counter'}.`,
@@ -230,6 +235,10 @@ const completeToken = async (req, res, next) => {
       timestamp: new Date()
     });
 
+    // Synchronize CSV dataset immediately
+    recordTokenInCsv(token, token.serviceId?.name, token.counterId?.name);
+    syncTokensCsv();
+
     res.status(200).json({
       success: true,
       message: `Token ${token.tokenNumber} marked as completed.`,
@@ -273,6 +282,10 @@ const skipToken = async (req, res, next) => {
       token,
       timestamp: new Date()
     });
+
+    // Synchronize CSV dataset immediately
+    recordTokenInCsv(token, token.serviceId?.name, token.counterId?.name);
+    syncTokensCsv();
 
     res.status(200).json({
       success: true,

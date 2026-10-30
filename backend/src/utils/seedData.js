@@ -8,6 +8,7 @@ const Service = require('../models/Service');
 const Counter = require('../models/Counter');
 const Token = require('../models/Token');
 const TokenSequence = require('../models/TokenSequence');
+const { syncAllCsvs } = require('./csvSync');
 
 async function seedDatabase() {
   try {
@@ -168,6 +169,11 @@ async function seedDatabase() {
 
     console.log('[Seed] Created initial sample tokens.');
     console.log('[Seed] Database seeding completed successfully!');
+
+    // Automatically export freshly seeded datasets to CSV
+    await syncAllCsvs();
+    console.log('[Seed] Synchronized all CSV datasets in exports/');
+
     process.exit(0);
   } catch (error) {
     console.error('[Seed Error] Failed to seed database:', error);

@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const ActivityLog = require('../models/ActivityLog');
 const AppError = require('../utils/AppError');
+const { recordUserInCsv, recordActivityLogInCsv, syncUsersCsv, syncActivityLogsCsv } = require('../utils/csvSync');
 
 /**
  * Generate a signed JWT token
@@ -46,12 +47,20 @@ const register = async (req, res, next) => {
     });
 
     // Record in audit log dataset
-    await ActivityLog.create({
+    const regLog = {
       action: 'REGISTER',
       dataset: 'users',
       details: { userId: newUser._id, email: newUser.email, role: newUser.role },
-      performedBy: newUser.email
-    }).catch(err => console.warn('[ActivityLog] Could not log registration:', err.message));
+      performedBy: newUser.email,
+      createdAt: new Date()
+    };
+    await ActivityLog.create(regLog).catch(err => console.warn('[ActivityLog] Could not log registration:', err.message));
+
+    // Automatically store in CSV database files
+    recordUserInCsv(newUser);
+    recordActivityLogInCsv(regLog);
+    syncUsersCsv();
+    syncActivityLogsCsv();
 
     const token = signToken(newUser);
 
@@ -94,12 +103,18 @@ const login = async (req, res, next) => {
     }
 
     // Record in audit log dataset
-    await ActivityLog.create({
+    const loginLog = {
       action: 'LOGIN',
       dataset: 'users',
       details: { userId: user._id, email: user.email, role: user.role },
-      performedBy: user.email
-    }).catch(err => console.warn('[ActivityLog] Could not log login:', err.message));
+      performedBy: user.email,
+      createdAt: new Date()
+    };
+    await ActivityLog.create(loginLog).catch(err => console.warn('[ActivityLog] Could not log login:', err.message));
+
+    // Automatically store in CSV database files
+    recordActivityLogInCsv(loginLog);
+    syncActivityLogsCsv();
 
     const token = signToken(user);
 

@@ -5,6 +5,7 @@ const ActivityLog = require('../models/ActivityLog');
 const AppError = require('../utils/AppError');
 const { generateNextTokenNumber } = require('../utils/tokenGenerator');
 const { emitQueueUpdate } = require('../config/socket');
+const { recordTokenInCsv, recordActivityLogInCsv, syncTokensCsv, syncSequencesCsv, syncActivityLogsCsv } = require('../utils/csvSync');
 
 /**
  * POST /api/tokens
@@ -37,12 +38,21 @@ const createToken = async (req, res, next) => {
     });
 
     // Record in activity logs dataset
-    await ActivityLog.create({
+    const tokenLog = {
       action: 'TOKEN_CREATED',
       dataset: 'tokens',
       details: { tokenId: token._id, tokenNumber: token.tokenNumber, customerName: token.customerName, service: service.name },
-      performedBy: customerName.trim()
-    }).catch(err => console.warn('[ActivityLog] Could not log token creation:', err.message));
+      performedBy: customerName.trim(),
+      createdAt: new Date()
+    };
+    await ActivityLog.create(tokenLog).catch(err => console.warn('[ActivityLog] Could not log token creation:', err.message));
+
+    // Automatically store in CSV database files
+    recordTokenInCsv(token, service.name, 'Unassigned');
+    recordActivityLogInCsv(tokenLog);
+    syncTokensCsv();
+    syncSequencesCsv();
+    syncActivityLogsCsv();
 
     // Calculate queue backlog ahead of this customer
     const waitingAhead = await Token.countDocuments({

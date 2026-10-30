@@ -1,6 +1,7 @@
 const Service = require('../models/Service');
 const Counter = require('../models/Counter');
 const AppError = require('../utils/AppError');
+const { recordServiceInCsv, recordCounterInCsv, syncServicesCsv, syncCountersCsv } = require('../utils/csvSync');
 
 /**
  * GET /api/services
@@ -41,6 +42,10 @@ const createService = async (req, res, next) => {
       averageServiceTime: averageServiceTime ? Number(averageServiceTime) : 10,
       isActive: isActive !== undefined ? Boolean(isActive) : true
     });
+
+    // Synchronize CSV dataset immediately
+    recordServiceInCsv(service);
+    syncServicesCsv();
 
     res.status(201).json({
       success: true,
@@ -96,6 +101,10 @@ const createCounter = async (req, res, next) => {
       serviceId: service._id,
       isActive: isActive !== undefined ? Boolean(isActive) : true
     });
+
+    // Synchronize CSV dataset immediately
+    recordCounterInCsv(counter, service.name);
+    syncCountersCsv();
 
     const populatedCounter = await Counter.findById(counter._id).populate('serviceId', 'name');
 
