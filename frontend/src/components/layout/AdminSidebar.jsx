@@ -73,12 +73,12 @@ export default function AdminSidebar({ isMobileOpen, setIsMobileOpen }) {
           </span>
         </div>
         <select
-          value={activeCounterId}
+          value={activeCounterId || ''}
           onChange={(e) => setActiveCounterId(e.target.value)}
           className="w-full text-xs font-semibold bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-white focus:outline-hidden focus:ring-2 focus:ring-purple-500 cursor-pointer"
         >
           {counters.map(c => (
-            <option key={c.id} value={c.id}>
+            <option key={c.id || c._id} value={c.id || c._id}>
               {c.name || c.number || 'Counter'}
             </option>
           ))}

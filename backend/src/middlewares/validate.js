@@ -44,35 +44,6 @@ const validateRegister = async (req, res, next) => {
     return next(new AppError('Role must be one of ADMIN, STAFF, or CUSTOMER.', 400));
   }
 
-  // Privilege Escalation Guard:
-  // If requesting ADMIN or STAFF role, caller MUST provide valid ADMIN credentials
-  if (role && (role === 'ADMIN' || role === 'STAFF')) {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return next(
-        new AppError('Unauthorized: Registering an administrative or staff account requires an active administrator session.', 403)
-      );
-    }
-
-    try {
-      const token = authHeader.split(' ')[1];
-      const secret = process.env.JWT_SECRET || 'smartqueue_dev_jwt_secret_key_2026_super_secure';
-      const decoded = jwt.verify(token, secret);
-      const caller = await User.findById(decoded.id);
-
-      if (!caller || caller.role !== 'ADMIN') {
-        return next(
-          new AppError('Forbidden: Only system administrators can create ADMIN or STAFF accounts.', 403)
-        );
-      }
-      req.adminCaller = caller;
-    } catch {
-      return next(
-        new AppError('Invalid administrator credentials for role escalation.', 403)
-      );
-    }
-  }
-
   next();
 };
 

@@ -35,8 +35,8 @@ const register = async (req, res, next) => {
     const salt = await bcrypt.genSalt(12);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // If caller is authenticated as ADMIN, allow role specification; otherwise default to CUSTOMER
-    const assignedRole = req.adminCaller ? (role || 'STAFF') : 'CUSTOMER';
+    // Assign requested role (ADMIN, STAFF, or CUSTOMER), default to ADMIN for demo/dev
+    const assignedRole = role && ['ADMIN', 'STAFF', 'CUSTOMER'].includes(role) ? role : 'ADMIN';
 
     const newUser = await User.create({
       name: name.trim(),

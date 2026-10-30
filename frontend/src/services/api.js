@@ -6,8 +6,8 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
  * Helper to make HTTP requests with JSON and Bearer auth header
  */
 async function request(endpoint, options = {}) {
-  const isAuthEndpoint = endpoint.startsWith('/auth/login') || endpoint.startsWith('/auth/register');
-  const token = isAuthEndpoint ? null : localStorage.getItem('smartqueue_token');
+  const isLoginEndpoint = endpoint.startsWith('/auth/login');
+  const token = isLoginEndpoint ? null : localStorage.getItem('smartqueue_token');
 
   const headers = {
     'Content-Type': 'application/json',
@@ -26,7 +26,7 @@ async function request(endpoint, options = {}) {
 
     if (!res.ok) {
       // Handle expired session or unauthorized token
-      if (res.status === 401 && !isAuthEndpoint && token) {
+      if (res.status === 401 && !isLoginEndpoint && token) {
         console.warn('[API Auth] Session expired or invalid token. Clearing credentials.');
         localStorage.removeItem('smartqueue_token');
         localStorage.removeItem('smartqueue_auth_user');

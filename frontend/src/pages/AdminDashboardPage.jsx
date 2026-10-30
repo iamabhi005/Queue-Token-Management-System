@@ -160,12 +160,12 @@ export default function AdminDashboardPage() {
             <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 flex-1 sm:flex-initial">
               <span className="text-[11px] sm:text-xs font-semibold text-slate-500 px-1.5 hidden md:inline">Station:</span>
               <select
-                value={activeCounterId}
+                value={activeCounterId || ''}
                 onChange={(e) => setActiveCounterId(e.target.value)}
                 className="text-xs font-bold text-slate-800 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 shadow-2xs focus:outline-hidden cursor-pointer w-full sm:w-auto"
               >
                 {counters.map(c => (
-                  <option key={c.id} value={c.id}>
+                  <option key={c.id || c._id} value={c.id || c._id}>
                     {c.name || c.number || 'Counter'}
                   </option>
                 ))}
@@ -234,7 +234,7 @@ export default function AdminDashboardPage() {
               value={currentCounterServingToken?.tokenNumber || (servingCount > 0 ? `${servingCount} Active` : 'None')}
               icon={Zap}
               color="emerald"
-              changeText={currentCounterServingToken ? `At ${activeCounter?.number}` : 'Awaiting next call'}
+              changeText={currentCounterServingToken ? `At ${activeCounter?.name || activeCounter?.number || 'Station'}` : 'Awaiting next call'}
             />
             <StatCard
               title="Completed"
@@ -314,7 +314,7 @@ export default function AdminDashboardPage() {
                 </button>
 
                 <button
-                  onClick={() => currentCounterServingToken && handleComplete(currentCounterServingToken.id)}
+                  onClick={() => currentCounterServingToken && handleComplete(currentCounterServingToken.id || currentCounterServingToken._id)}
                   disabled={!currentCounterServingToken}
                   className="py-3.5 px-4 rounded-xl text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
@@ -323,7 +323,7 @@ export default function AdminDashboardPage() {
                 </button>
 
                 <button
-                  onClick={() => currentCounterServingToken && handleSkip(currentCounterServingToken.id)}
+                  onClick={() => currentCounterServingToken && handleSkip(currentCounterServingToken.id || currentCounterServingToken._id)}
                   disabled={!currentCounterServingToken}
                   className="py-3.5 px-4 rounded-xl text-sm font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
@@ -355,7 +355,7 @@ export default function AdminDashboardPage() {
                   ) : (
                     counterWaitingTokens.map((t, idx) => (
                       <div
-                        key={t.id}
+                        key={t.id || t._id}
                         className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between hover:bg-slate-100/70 transition-colors"
                       >
                         <div className="flex items-center gap-3">
@@ -466,7 +466,7 @@ export default function AdminDashboardPage() {
                     </tr>
                   ) : (
                     filteredTokens.slice(0, 10).map((token) => (
-                      <tr key={token.id} className="hover:bg-slate-50/70 transition-colors">
+                      <tr key={token.id || token._id} className="hover:bg-slate-50/70 transition-colors">
                         <td className="px-6 py-4 font-mono-num font-bold text-slate-900">
                           <span className="text-purple-700">{token.tokenNumber}</span>
                           {token.priority === 'PRIORITY' && (
@@ -487,7 +487,7 @@ export default function AdminDashboardPage() {
                           <Badge status={token.status} />
                         </td>
                         <td className="px-6 py-4 text-xs font-mono-num text-slate-500">
-                          {token.waitMinutes} mins
+                          {token.waitMinutes || 5} mins
                         </td>
                         <td className="px-6 py-4 text-right">
                           {token.status === 'WAITING' ? (
@@ -502,13 +502,13 @@ export default function AdminDashboardPage() {
                           ) : token.status === 'SERVING' ? (
                             <div className="inline-flex gap-1">
                               <button
-                                onClick={() => handleComplete(token.id)}
+                                onClick={() => handleComplete(token.id || token._id)}
                                 className="px-2 py-1 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors cursor-pointer"
                               >
                                 Finish
                               </button>
                               <button
-                                onClick={() => handleSkip(token.id)}
+                                onClick={() => handleSkip(token.id || token._id)}
                                 className="px-2 py-1 text-xs font-semibold rounded-lg bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors cursor-pointer"
                               >
                                 Skip
