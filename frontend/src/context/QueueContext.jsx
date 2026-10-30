@@ -94,6 +94,20 @@ export function QueueProvider({ children }) {
     return counterId;
   };
 
+  // Helper: get assigned counter(s) for a given serviceId
+  const getCountersForService = (serviceId) => {
+    if (!serviceId) return [];
+    const targetSrvId = String(resolveServiceId(serviceId));
+    return counters.filter(c => {
+      const cSrvId = String(resolveServiceId(c.serviceId));
+      if (cSrvId === targetSrvId) return true;
+      if (c.supportedServiceIds && Array.isArray(c.supportedServiceIds)) {
+        return c.supportedServiceIds.some(sId => String(resolveServiceId(sId)) === targetSrvId);
+      }
+      return false;
+    });
+  };
+
   // Active counter object
   const activeCounter = counters.find(c => c.id === activeCounterId) || counters[0] || null;
 
@@ -101,15 +115,23 @@ export function QueueProvider({ children }) {
   const generateToken = async ({ customerName, serviceId }) => {
     try {
       const response = await tokenAPI.createToken(customerName, serviceId);
-      // API returns { success, message, data: { token, service, waitingAhead, estimatedWaitMinutes } }
+      // API returns { success, message, data: { token, service, waitingAhead, estimatedWaitMinutes, designatedCounter } }
       const token = response?.data?.token || response?.data;
       if (!token) throw new Error('Invalid token response');
 
       // Enrich token object with service name and wait minutes for UI presentation
       const srvName = response?.data?.service?.name || services.find(s => s.id === serviceId)?.name || 'General Service';
       const waitMins = response?.data?.estimatedWaitMinutes || 10;
+      
+      // Determine assigned counter for this service
+      const matchedCounters = getCountersForService(serviceId);
+      const designatedCounter = response?.data?.designatedCounter || 
+        (matchedCounters.length > 0 ? matchedCounters.map(c => c.name).join(', ') : 'Counter Station');
+
       token.serviceName = srvName;
       token.waitMinutes = waitMins;
+      token.counterNumber = designatedCounter;
+      token.designatedCounter = designatedCounter;
 
       setTokens(prev => {
         const id = token.id || token._id;
@@ -203,6 +225,10 @@ export function QueueProvider({ children }) {
       if (!token) return;
       if (payload.service?.name) token.serviceName = payload.service.name;
       if (payload.estimatedWaitMinutes) token.waitMinutes = payload.estimatedWaitMinutes;
+      if (payload.designatedCounter) {
+        token.designatedCounter = payload.designatedCounter;
+        token.counterNumber = payload.designatedCounter;
+      }
 
       setTokens(prev => {
         const tokenId = token.id || token._id;
@@ -390,7 +416,8 @@ export function QueueProvider({ children }) {
         toggleMute,
         syncQueueState,
         resolveServiceId,
-        resolveCounterId
+        resolveCounterId,
+        getCountersForService
       }}
     >
       {children}

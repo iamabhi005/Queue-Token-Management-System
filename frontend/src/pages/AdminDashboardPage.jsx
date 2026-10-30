@@ -56,7 +56,8 @@ export default function AdminDashboardPage() {
     generateToken,
     syncQueueState,
     resolveServiceId,
-    resolveCounterId
+    resolveCounterId,
+    getCountersForService
   } = useQueue();
 
   const isAdmin = user?.role === 'ADMIN';
@@ -235,7 +236,7 @@ export default function AdminDashboardPage() {
       const customerName = user?.name || 'Valued Customer';
       const token = await generateToken({ customerName, serviceId: targetServiceId });
       setCustomerBookingSuccess(token);
-      showFeedback(`Token ${token.tokenNumber} generated! You are in queue.`, 'success');
+      showFeedback(`Token ${token.tokenNumber} booked for ${token.counterNumber || 'Counter'}! You are in queue.`, 'success');
     } catch (err) {
       showFeedback(err.message || 'Failed to generate token.', 'warning');
     } finally {
@@ -1043,10 +1044,10 @@ export default function AdminDashboardPage() {
                       {customerActiveToken.tokenNumber}
                     </h4>
                   </div>
-                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
-                    <span className="text-xs text-slate-500 font-bold uppercase">Assigned Station</span>
-                    <h4 className="text-2xl font-black text-slate-800 mt-2">
-                      {customerActiveToken.counterNumber || 'Waiting for Counter...'}
+                  <div className="p-4 bg-purple-50 rounded-2xl border border-purple-200">
+                    <span className="text-xs text-purple-700 font-bold uppercase">Assigned Station</span>
+                    <h4 className="text-2xl font-black text-purple-900 mt-2">
+                      {customerActiveToken.counterNumber || customerActiveToken.designatedCounter || 'Counter Station'}
                     </h4>
                   </div>
                   <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
@@ -1074,38 +1075,46 @@ export default function AdminDashboardPage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {services.map((s) => (
-                  <div
-                    key={s.id || s._id}
-                    className="p-5 rounded-2xl border border-slate-200 hover:border-purple-400 bg-slate-50 hover:bg-purple-50/50 transition-all flex flex-col justify-between group"
-                  >
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs">
-                          {s.name.charAt(0)}
-                        </span>
-                        <span className="text-[11px] font-bold text-slate-500">
-                          ~{s.averageServiceTime || 10}m
-                        </span>
-                      </div>
-                      <h4 className="text-sm font-bold text-slate-900 group-hover:text-purple-700 transition-colors">
-                        {s.name}
-                      </h4>
-                      <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                        {s.description || 'General inquiry and department services.'}
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => handleCustomerBookToken(s.id || s._id)}
-                      disabled={isBookingToken}
-                      className="mt-4 w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white bg-slate-900 hover:bg-purple-700 transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
+                {services.map((s) => {
+                  const assignedCtrs = getCountersForService ? getCountersForService(s.id || s._id) : [];
+                  const assignedCounterNames = assignedCtrs.length > 0 ? assignedCtrs.map(c => c.name).join(', ') : 'Station Counter';
+                  return (
+                    <div
+                      key={s.id || s._id}
+                      className="p-5 rounded-2xl border border-slate-200 hover:border-purple-400 bg-slate-50 hover:bg-purple-50/50 transition-all flex flex-col justify-between group"
                     >
-                      <Ticket className="w-3.5 h-3.5" />
-                      <span>Take Token</span>
-                    </button>
-                  </div>
-                ))}
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="w-8 h-8 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs">
+                            {s.name.charAt(0)}
+                          </span>
+                          <span className="text-[11px] font-bold text-slate-500">
+                            ~{s.averageServiceTime || 10}m
+                          </span>
+                        </div>
+                        <h4 className="text-sm font-bold text-slate-900 group-hover:text-purple-700 transition-colors">
+                          {s.name}
+                        </h4>
+                        <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                          {s.description || 'General inquiry and department services.'}
+                        </p>
+                        <div className="mt-2.5 flex items-center gap-1.5 text-[11px] font-bold text-purple-700 bg-purple-50/90 px-2 py-0.5 rounded-lg border border-purple-200/70 w-fit">
+                          <Building2 className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                          <span>Counter: {assignedCounterNames}</span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleCustomerBookToken(s.id || s._id)}
+                        disabled={isBookingToken}
+                        className="mt-4 w-full py-2.5 px-3 rounded-xl text-xs font-bold text-white bg-slate-900 hover:bg-purple-700 transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
+                      >
+                        <Ticket className="w-3.5 h-3.5" />
+                        <span>Take Token</span>
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 

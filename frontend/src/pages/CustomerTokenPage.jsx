@@ -19,7 +19,8 @@ import {
   QrCode,
   ShieldAlert,
   ChevronRight,
-  Tv
+  Tv,
+  Building2
 } from 'lucide-react';
 import { useQueue } from '../context/QueueContext';
 import Navbar from '../components/layout/Navbar';
@@ -37,7 +38,7 @@ const iconMap = {
 
 export default function CustomerTokenPage() {
   const location = useLocation();
-  const { services, tokens, counters, generateToken, waitingTokens } = useQueue();
+  const { services, tokens, counters, generateToken, waitingTokens, getCountersForService } = useQueue();
 
   // Helper to resolve serviceId from populated object or raw string
   const resolveServiceId = (serviceId) => {
@@ -104,8 +105,12 @@ export default function CustomerTokenPage() {
     }
   }, [services, selectedServiceId]);
 
-  // Selected Service object
+  // Selected Service object and its designated counters
   const selectedService = services.find(s => s.id === selectedServiceId) || services[0];
+  const selectedAssignedCounters = getCountersForService ? getCountersForService(selectedService?.id) : [];
+  const selectedCounterNames = selectedAssignedCounters.length > 0 
+    ? selectedAssignedCounters.map(c => c.name).join(', ') 
+    : 'Counter Station';
 
   // Live queue data for selected service
   const waitingInSelectedService = waitingTokens.filter(t => resolveServiceId(t.serviceId) === selectedService?.id).length;
@@ -288,6 +293,8 @@ export default function CustomerTokenPage() {
                             const isSelected = selectedServiceId === service.id;
                             const prefixCode = service.code || service.name?.split(' ').map(w => w[0]).join('').slice(0, 4).toUpperCase() || 'SRV';
                             const estMinutes = service.averageServiceTime || service.estimatedTime || 10;
+                            const assignedCtrs = getCountersForService ? getCountersForService(service.id) : [];
+                            const assignedCounterNames = assignedCtrs.length > 0 ? assignedCtrs.map(c => c.name).join(', ') : 'Station Counter';
                             return (
                               <div
                                 key={service.id}
@@ -311,6 +318,10 @@ export default function CustomerTokenPage() {
                                   </div>
                                   <h3 className="text-sm font-bold text-slate-900 leading-snug">{service.name}</h3>
                                   <p className="text-xs text-slate-500 mt-1 line-clamp-2">{service.description}</p>
+                                  <div className="mt-2.5 flex items-center gap-1.5 text-[11px] font-bold text-purple-700 bg-purple-50/90 px-2 py-0.5 rounded-lg border border-purple-200/70 w-fit">
+                                    <Building2 className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                                    <span>Counter: {assignedCounterNames}</span>
+                                  </div>
                                 </div>
 
                                 <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-medium">
@@ -411,6 +422,16 @@ export default function CustomerTokenPage() {
                     </h3>
 
                     <div className="space-y-4">
+                      <div className="flex items-center justify-between p-3.5 rounded-xl bg-purple-50/80 border border-purple-200">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-purple-600" />
+                          <span className="text-xs font-semibold text-purple-900">Service Counter</span>
+                        </div>
+                        <span className="text-sm font-black text-purple-900 font-mono-num">
+                          {selectedCounterNames}
+                        </span>
+                      </div>
+
                       <div className="p-4 rounded-2xl bg-purple-50/60 border border-purple-100">
                         <p className="text-xs font-semibold text-purple-700">Currently Serving</p>
                         <p className="text-2xl font-extrabold text-slate-900 font-mono-num mt-1">
@@ -492,6 +513,16 @@ export default function CustomerTokenPage() {
 
                   {/* Real-time Status Breakdown */}
                   <div className="space-y-3 py-2 text-sm">
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-purple-50/80 border border-purple-200/80 mb-2">
+                      <span className="flex items-center gap-2 text-xs font-bold text-purple-900">
+                        <Building2 className="w-4 h-4 text-purple-600" />
+                        Assigned Service Counter:
+                      </span>
+                      <span className="font-extrabold text-purple-900 font-mono-num text-sm">
+                        {generatedToken.counterNumber || generatedToken.designatedCounter || selectedCounterNames || 'Station Counter'}
+                      </span>
+                    </div>
+
                     <div className="flex items-center justify-between text-slate-600">
                       <span className="flex items-center gap-2 text-xs">
                         <Users className="w-4 h-4 text-amber-500" />
@@ -653,12 +684,10 @@ export default function CustomerTokenPage() {
                       <span className="text-slate-400">Customer:</span>
                       <span className="font-semibold text-white">{trackedToken.customerName}</span>
                     </div>
-                    {trackedToken.counterNumber && (
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Serving Counter:</span>
-                        <span className="font-bold text-emerald-400">{trackedToken.counterNumber}</span>
-                      </div>
-                    )}
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-slate-400">Assigned Station / Counter:</span>
+                      <span className="font-bold text-emerald-400">{trackedToken.counterNumber || trackedToken.designatedCounter || 'Station Counter'}</span>
+                    </div>
                     <div className="flex justify-between">
                       <span className="text-slate-400">Issued At:</span>
                       <span>{new Date(trackedToken.createdAt).toLocaleTimeString()}</span>

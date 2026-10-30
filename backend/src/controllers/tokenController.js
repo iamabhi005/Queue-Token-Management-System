@@ -37,18 +37,27 @@ const createToken = async (req, res, next) => {
       createdAt: new Date()
     });
 
+    // Find designated active counter(s) for this service
+    const assignedCounters = await Counter.find({
+      serviceId: service._id,
+      isActive: true
+    }).select('name');
+    const designatedCounterName = assignedCounters.length > 0
+      ? assignedCounters.map(c => c.name).join(', ')
+      : 'Counter Station';
+
     // Record in activity logs dataset
     const tokenLog = {
       action: 'TOKEN_CREATED',
       dataset: 'tokens',
-      details: { tokenId: token._id, tokenNumber: token.tokenNumber, customerName: token.customerName, service: service.name },
+      details: { tokenId: token._id, tokenNumber: token.tokenNumber, customerName: token.customerName, service: service.name, counter: designatedCounterName },
       performedBy: customerName.trim(),
       createdAt: new Date()
     };
     await ActivityLog.create(tokenLog).catch(err => console.warn('[ActivityLog] Could not log token creation:', err.message));
 
-    // Automatically store in CSV database files
-    recordTokenInCsv(token, service.name, 'Unassigned');
+    // Automatically store in CSV database files with designated counter
+    recordTokenInCsv(token, service.name, designatedCounterName);
     recordActivityLogInCsv(tokenLog);
     syncTokensCsv();
     syncSequencesCsv();
@@ -74,8 +83,13 @@ const createToken = async (req, res, next) => {
 
     // Broadcast live event to all connected clients & public display screens
     emitQueueUpdate('TOKEN_ISSUED', {
-      token,
+      token: {
+        ...token.toObject(),
+        counterNumber: designatedCounterName,
+        designatedCounter: designatedCounterName
+      },
       service: { id: service._id, name: service.name },
+      designatedCounter: designatedCounterName,
       waitingAhead,
       estimatedWaitMinutes
     });
@@ -90,6 +104,8 @@ const createToken = async (req, res, next) => {
           name: service.name,
           averageServiceTime: service.averageServiceTime
         },
+        designatedCounter: designatedCounterName,
+        counterNumber: designatedCounterName,
         waitingAhead,
         estimatedWaitMinutes,
         currentServingToken: currentServing ? currentServing.tokenNumber : null,
@@ -162,11 +178,20 @@ const getTokenStatus = async (req, res, next) => {
       status: 'SERVING'
     }).populate('counterId', 'name');
 
+    // Designated counter for this service
+    const assignedCounters = await Counter.find({
+      serviceId: token.serviceId._id,
+      isActive: true
+    }).select('name');
+    const designatedCounter = assignedCounters.length > 0 ? assignedCounters.map(c => c.name).join(', ') : 'Counter Station';
+
     res.status(200).json({
       success: true,
       data: {
         token,
         status: token.status,
+        designatedCounter: token.counterId?.name || designatedCounter,
+        counterNumber: token.counterId?.name || designatedCounter,
         waitingAhead,
         estimatedWaitMinutes: token.status === 'WAITING' ? estimatedWaitMinutes : 0,
         currentServing: activeServing ? {
