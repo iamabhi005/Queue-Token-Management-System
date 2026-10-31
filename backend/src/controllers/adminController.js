@@ -186,21 +186,24 @@ const callNextToken = async (req, res, next) => {
        .populate('counterId', 'name');
     }
 
-    // 2. Fallback: If no waiting customer for this specific service, call next waiting from ANY service!
+    // 2. Fallback: No waiting token for this service — return informative message, DO NOT cross-service call
     if (!nextToken) {
-      nextToken = await Token.findOneAndUpdate(
-        { status: 'WAITING' },
-        {
-          status: 'SERVING',
-          counterId: counterDoc ? counterDoc._id : null,
-          calledAt: new Date()
-        },
-        {
-          sort: { createdAt: 1 },
-          new: true
-        }
-      ).populate('serviceId', 'name averageServiceTime')
-       .populate('counterId', 'name');
+      // Only cross-serve if counter has no assigned service (general counter)
+      if (!targetServiceId) {
+        nextToken = await Token.findOneAndUpdate(
+          { status: 'WAITING' },
+          {
+            status: 'SERVING',
+            counterId: counterDoc ? counterDoc._id : null,
+            calledAt: new Date()
+          },
+          {
+            sort: { createdAt: 1 },
+            new: true
+          }
+        ).populate('serviceId', 'name averageServiceTime')
+         .populate('counterId', 'name');
+      }
     }
 
     if (!nextToken) {

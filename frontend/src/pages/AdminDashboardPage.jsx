@@ -98,29 +98,33 @@ export default function AdminDashboardPage() {
   const [customerBookingSuccess, setCustomerBookingSuccess] = useState(null);
   const [isBookingToken, setIsBookingToken] = useState(false);
 
-  // Current token being served at active station (with fallback to any SERVING token if unassigned or single station)
-  const currentCounterServingToken = tokens.find(t => {
-    if (t.status !== 'SERVING') return false;
-    const cId = resolveCounterId(t.counterId);
-    if (!cId || !activeCounterId) return true;
-    return String(cId) === String(activeCounterId);
-  }) || tokens.find(t => t.status === 'SERVING');
+  // Current token being served ONLY at the active/selected counter (strict match)
+  const currentCounterServingToken = activeCounterId
+    ? tokens.find(t => {
+        if (t.status !== 'SERVING') return false;
+        const cId = resolveCounterId(t.counterId);
+        return cId && String(cId) === String(activeCounterId);
+      })
+    : tokens.find(t => t.status === 'SERVING');
 
-  // Eligible waiting tokens for this counter
+  // Eligible waiting tokens for the selected counter's service — strictly filtered
   const counterWaitingTokens = tokens.filter(t => {
     if (t.status !== 'WAITING') return false;
+    // If no active counter selected, show all waiting
+    if (!activeCounter) return true;
     const tServiceId = resolveServiceId(t.serviceId);
     const activeServiceId = resolveServiceId(activeCounter?.serviceId);
-    if (activeCounter?.supportedServiceIds && Array.isArray(activeCounter.supportedServiceIds)) {
-      return activeCounter.supportedServiceIds.includes(tServiceId);
+    // supportedServiceIds takes priority (multi-service counter)
+    if (activeCounter?.supportedServiceIds && Array.isArray(activeCounter.supportedServiceIds) && activeCounter.supportedServiceIds.length > 0) {
+      return activeCounter.supportedServiceIds.some(sId => String(resolveServiceId(sId)) === String(tServiceId));
     }
-    return !activeServiceId || String(activeServiceId) === String(tServiceId);
+    // Strictly match service — no fallback to all tokens
+    return activeServiceId && String(activeServiceId) === String(tServiceId);
   });
 
-  // Display waiting tokens fallback to all waiting tokens if counter-specific queue is empty
-  const displayWaitingTokens = counterWaitingTokens.length > 0
-    ? counterWaitingTokens
-    : tokens.filter(t => t.status === 'WAITING');
+  // Show the counter's own queue — NO cross-counter fallback
+  // (previously it fell back to ALL waiting tokens which caused the bug)
+  const displayWaitingTokens = counterWaitingTokens;
 
   const showFeedback = (message, type = 'success') => {
     setActionFeedback({ message, type });
